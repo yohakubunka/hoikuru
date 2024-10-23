@@ -1,0 +1,13 @@
+version: "3"
+
+services:
+  frontend:
+    ports:
+      - 3000:3000
+    build: frontend
+    container_name: hoikuru-web
+    tty: true
+    volumes:
+      - ../frontend:/usr/src/app
+    environment:
+      - WATCHPACK_POLLING=true
