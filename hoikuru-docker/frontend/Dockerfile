@@ -1,4 +1,4 @@
-FROM node:18.17-alpine
+FROM node:18.18-alpine
 # 何を使うかSERVERによって何を使うのかを分ける
 
 WORKDIR /usr/src/app
