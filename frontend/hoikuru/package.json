@@ -13,7 +13,7 @@
     "@uppy/core": "^4.2.2",
     "@uppy/react": "^4.0.2",
     "@uppy/xhr-upload": "^4.2.1",
-    "next": "^15.0.1",
+    "next": "^13.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "zod": "^3.23.8"
