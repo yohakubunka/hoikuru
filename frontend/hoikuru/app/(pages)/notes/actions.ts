@@ -8,7 +8,7 @@ import { createClient as serviceCreateClient } from '@supabase/supabase-js';
 import { stat } from "fs";
 
 export const insertNoteAction = async (
-    {content, title}:{content:string | undefined | null, title:string}
+    {content, title}:{content:string | undefined | null, title:string,message:string}
 ) => {
     const supabase = await createClient();
 
