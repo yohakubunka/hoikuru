@@ -52,7 +52,7 @@ export default function AddForm() {
         const res:any = insertNoteAction({
             title: values.title,
             content: values.content
-        })
+        }) 
         
         if(!res.status) {
             toast({
