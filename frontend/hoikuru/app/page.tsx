@@ -1,13 +1,16 @@
-import { Button } from "@/components/ui/button"
+import Hero from "@/components/hero";
+import ConnectSupabaseSteps from "@/components/tutorial/connect-supabase-steps";
+import SignUpUserSteps from "@/components/tutorial/sign-up-user-steps";
+import { hasEnvVars } from "@/utils/supabase/check-env-vars";
 
-export default function Home() {
+export default async function Index() {
   return (
-    <div className="flex items-center justify-center h-screen bg-gray-100">
-    <h1 className="text-4xl font-bold text-blue-500">Hello, Tailwind CSS!</h1>
-
-    <div>
-      <Button>Click me</Button>
-    </div>
-  </div>
+    <>
+      <Hero />
+      <main className="flex-1 flex flex-col gap-6 px-4">
+        <h2 className="font-medium text-xl mb-4">Next steps</h2>
+        {hasEnvVars ? <SignUpUserSteps /> : <ConnectSupabaseSteps />}
+      </main>
+    </>
   );
 }
