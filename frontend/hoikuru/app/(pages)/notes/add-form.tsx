@@ -57,13 +57,13 @@ export default function AddForm() {
         if(!res.status) {
             toast({
                 title: "エラー",
-                description: values.message,
+                // description: values.message,
                 variant: "destructive"
               })
         }else {
             toast({
                 title: "追加",
-                description: values.message,
+                // description: values.message,
               })
         }
 
