@@ -51,3 +51,5 @@ Node.js（v18 以上）と npm がインストールされていることを確�
 #### Vercel の自動ビルド
 
 master ブランチにプッシュされた場合、Vercel が自動でビルド処理を行います。
+
+[Vercel](https://vercel.com/yohaku-bunkas-projects/hoikuru)
