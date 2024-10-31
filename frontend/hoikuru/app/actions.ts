@@ -23,10 +23,40 @@ export const signUpAction = async (formData: FormData) => {
     },
   });
 
+  
+
   if (error) {
     console.error(error.code + " " + error.message);
     return encodedRedirect("error", "/sign-up", error.message);
   } else {
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+  
+    if (!user) {
+      return redirect("/sign-in");
+    }
+
+    console.log(user);
+
+      // サインアップが成功した場合、profiles テーブルにレコードを追加
+  if (user) {
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .insert([
+        { user_id: user.id,
+          name: user.email,
+          role: 3
+         }, 
+      ]);
+
+    if (profileError) {
+      console.error('Error creating profile:', profileError.message);
+      return encodedRedirect("error", "/sign-up", profileError.message);
+    }
+  }
+
     return encodedRedirect(
       "success",
       "/sign-up",
