@@ -25,6 +25,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { insertFacilityAction, updateFacilityAction } from "./actions";
+import FaciltiiesData from "./facilities-data";
+import { supabase } from "@/lib/supabase";
 
 // zodによるvalidation
 const formSchema = z.object({
@@ -44,6 +46,8 @@ const formSchema = z.object({
 export default function FacilityAdd() {
   // ダイアログの状態を保持するstate
   const [open, setOpen] = useState(false);
+  //   施設の情報を格納するstate
+  const [facilities, setFacilities] = useState([]);
 
   const { toast } = useToast();
   const form = useForm<z.infer<typeof formSchema>>({
@@ -56,34 +60,96 @@ export default function FacilityAdd() {
     },
   });
 
+  //   編集ボタンが押下された場合に施設の情報を格納するstate
+  const [selectedFacility, setSelectedFacility] = useState(null);
+
   // 新規追加ボタンがクリックされたときのハンドラー
   const handleAdd = () => {
+    setSelectedFacility(null); // selectedFacilityを空にする
     setOpen(true);
     form.reset();
   };
 
+  //   編集ボタンがクリックされた場合にダイアログを表示し、施設の情報を格納する関数
+  const handleEdit = (facility: any) => {
+    setSelectedFacility(facility);
+    setOpen(true);
+  };
+
+  // 施設一覧を取得する関数
+  const getFacilities = async () => {
+    const { data, error } = await supabase.from("facilities").select("*");
+
+    if (error) {
+      console.error("施設の取得エラー:", error);
+    } else {
+      setFacilities(data);
+    }
+  };
+
+  // selectedFacilityが変更されたときにフォームの値を設定
+  useEffect(() => {
+    if (selectedFacility) {
+      form.setValue("facility_name", selectedFacility.facility_name);
+      form.setValue("post_code", selectedFacility.post_code);
+      form.setValue("address", selectedFacility.address);
+      form.setValue("tel", selectedFacility.tel);
+    } else {
+      form.reset(); // 新規追加の場合はフォームをリセット
+    }
+  }, [selectedFacility]);
+
+  //   ページ読み込み時に施設の一覧を取得
+  useEffect(() => {
+    getFacilities();
+  }, []);
+
   //   保存押下時の処理
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    // 新規追加処理
-    const res: any = await insertFacilityAction({
-      facility_name: values.facility_name,
-      post_code: values.post_code,
-      address: values.address,
-      tel: values.tel,
-    });
+    if (selectedFacility) {
+      // 既存の施設を更新
+      const { error } = await updateFacilityAction(selectedFacility.id, {
+        facility_name: values.facility_name,
+        post_code: values.post_code,
+        address: values.address,
+        tel: values.tel,
+      });
 
-    if (!res.status) {
-      toast({
-        title: "エラー",
-        variant: "destructive",
-      });
+      if (error) {
+        toast({
+          title: "エラー",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "更新完了",
+        });
+        getFacilities(); // 施設一覧を再取得
+      }
     } else {
-      toast({
-        title: "追加",
+      // 新規追加処理
+      const res: any = await insertFacilityAction({
+        facility_name: values.facility_name,
+        post_code: values.post_code,
+        address: values.address,
+        tel: values.tel,
       });
+
+      if (!res.status) {
+        toast({
+          title: "エラー",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "追加",
+        });
+        getFacilities(); // 施設を追加後に施設一覧を再取得
+      }
     }
 
     setOpen(false);
+    setSelectedFacility(null); // ダイアログを閉じた後に選択した施設をリセット
   }
 
   return (
@@ -94,8 +160,14 @@ export default function FacilityAdd() {
         </DialogTrigger>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>施設の新規追加</DialogTitle>
-            <DialogDescription>施設の新規追加を行います。</DialogDescription>
+            <DialogTitle>
+              {selectedFacility ? "施設の編集" : "施設の新規追加"}
+            </DialogTitle>
+            <DialogDescription>
+              {selectedFacility
+                ? "施設の情報を編集します。"
+                : "施設の新規追加を行います。"}
+            </DialogDescription>
           </DialogHeader>
 
           <div>
@@ -163,12 +235,16 @@ export default function FacilityAdd() {
                   )}
                 />
 
-                <Button type="submit">追加</Button>
+                <Button type="submit">
+                  {selectedFacility ? "更新" : "追加"}
+                </Button>
               </form>
             </Form>
           </div>
         </DialogContent>
       </Dialog>
+
+      <FaciltiiesData facilities={facilities} onEdit={handleEdit} />
     </>
   );
 }

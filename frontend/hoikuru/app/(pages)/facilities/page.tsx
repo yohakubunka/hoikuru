@@ -7,6 +7,7 @@ export default function Faciltiies() {
       <div className="w-screen">
         <div className="m-8 w-full">
           <FacilityAdd />
+          <FaciltiiesData />
         </div>
       </div>
     </>

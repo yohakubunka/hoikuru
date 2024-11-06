@@ -29,21 +29,52 @@ export const insertFacilityAction = async (
 }
 
 // 施設編集処理を追加
-export const updateFacilityAction = async (id: number, facilityData: {
-    facility_name: string;
-    post_code: string;
-    address: string;
-    tel: string;
-}) => {
+export const updateFacilityAction = async ({id,facility_name,post_code,address,tel}:{id:number,facility_name:string,post_code:string,address:string,tel:string}
+) => {
     const supabase = await createClient();
 
 
     const { data, error } = await supabase
         .from('facilities')
-        .update(facilityData)
+        .update({
+            facility_name:facility_name,
+            post_code:post_code,
+            address:address,
+            tel:tel,
+        })
         .eq('id', id); // 指定したIDの施設を更新
         console.log(data);
         console.log(error);
 
     return { data, error };
 };
+
+// 施設情報の取得
+export const selectFacilitiesAction = async () => {
+    const supabase = await createClient();
+
+    const {data,error} = await supabase.from('facilities').select('*');
+
+    if (error){
+        return false;
+    }
+
+    return data;
+}
+
+// 施設情報の取得
+export const selectFacilityAction = async ({facility_id}: {facility_id:number}) => {
+    const supabase = await createClient();
+
+    const {data,error} = await supabase.from('facilities').select().eq('id',facility_id).single();
+
+    console.log('facility_id',facility_id);
+    console.log('data',data);
+    console.log('error',error);
+
+    if (error){
+        return false;
+    }
+
+    return data;
+}
