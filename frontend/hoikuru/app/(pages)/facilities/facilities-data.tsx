@@ -8,7 +8,7 @@ interface FacilitiesDataProps {
       post_code: string;
       address: string;
   }>;
-  onEdit: (facility: any) => void; // 編集ハンドラを受け取る
+  onEdit: (facility: any) => void; 
 }
 
 export default function FaciltiiesData({ facilities, onEdit }: FacilitiesDataProps) {
@@ -20,7 +20,7 @@ export default function FaciltiiesData({ facilities, onEdit }: FacilitiesDataPro
                   <p>電話番号: {facility.tel}</p>
                   <p>郵便番号: {facility.post_code}</p>
                   <p>住所: {facility.address}</p>
-                  <Button onClick={() => onEdit(facility)}>編集</Button> {/* 編集ボタン */}
+                  <Button onClick={() => onEdit(facility)}>編集</Button> 
               </li>
           ))}
       </ul>
