@@ -12,7 +12,7 @@ export const insertFacilityAction = async (
 ) => {
     const supabase = await createClient();
 
-    
+
     const { data, error } = await supabase.from('facilities').insert({
         facility_name: facility_name,
         tel: tel,
@@ -36,7 +36,7 @@ export const updateFacilityAction = async (id: number, facilityData: {
     tel: string;
 }) => {
     const supabase = await createClient();
-    
+
 
     const { data, error } = await supabase
         .from('facilities')
