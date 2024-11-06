@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -15,11 +15,12 @@ import {
     FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { updateProfileAction } from './actions'
+import { updateProfileAction, selectProfileAction } from './actions'
 import { useToast } from "@/hooks/use-toast"
+import { data } from "autoprefixer"
 
 const formSchema = z.object({
-    userName: z.string().nonempty('タイトルは必須です。'),
+    email: z.string().email(),
     lastName: z.string().optional(),
     firstName: z.string().optional(),
     lastName_kana: z.string().optional(),
@@ -36,7 +37,7 @@ export default function forms() {
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            userName: "",
+            email: "",
             lastName: "",
             firstName: "",
             lastName_kana: "",
@@ -48,24 +49,46 @@ export default function forms() {
     })
 
 
+    async function fetchUserProfile() {
+        const res = selectProfileAction()
+        res.then((data: any) => {
+            form.setValue('email', data?.email)
+        },(data: any) => {
+
+        })
+    }
+
+    useEffect(() => {
+        fetchUserProfile()
+    })
+
     function onSubmit(values: z.infer<typeof formSchema>) {
         const res: any = updateProfileAction({
-            title: values.title,
-            lastName: values.lastName
+            email: values.email
         })
 
-        if (!res.status) {
+        res.then((data: any) => {
+            if (!data.status) {
+                toast({
+                    title: "エラー",
+                    // description: values.message,
+                    variant: "destructive"
+                })
+            } else {
+                toast({
+                    title: "追加",
+                    description: data.message,
+                })
+            }
+        }, (data: any) => {
             toast({
-                title: "エラー",
+                title: "通信エラー",
                 // description: values.message,
                 variant: "destructive"
             })
-        } else {
-            toast({
-                title: "追加",
-                // description: values.message,
-            })
-        }
+        })
+
+        // console.log('res',res)
     }
 
 
@@ -77,10 +100,10 @@ export default function forms() {
 
                         <FormField
                             control={form.control}
-                            name="userName"
+                            name="email"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>ユーザー名</FormLabel>
+                                    <FormLabel>Eメール</FormLabel>
                                     <FormControl>
                                         <Input placeholder="" {...field} type="text" />
                                     </FormControl>
@@ -173,7 +196,7 @@ export default function forms() {
                                 </FormItem>
                             )}
                         />
-                                <FormField
+                        <FormField
                             control={form.control}
                             name="address"
                             render={({ field }) => (
