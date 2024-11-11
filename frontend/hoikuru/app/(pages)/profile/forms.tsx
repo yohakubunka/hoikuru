@@ -53,6 +53,7 @@ export default function forms() {
         const res = selectProfileAction()
         res.then((data: any) => {
             form.setValue('email', data?.email)
+            form.setValue('tellNum', data?.tellNum)
         },(data: any) => {
 
         })
@@ -64,7 +65,8 @@ export default function forms() {
 
     function onSubmit(values: z.infer<typeof formSchema>) {
         const res: any = updateProfileAction({
-            email: values.email
+            email: values.email,
+      
         })
 
         res.then((data: any) => {
@@ -97,7 +99,6 @@ export default function forms() {
             <div className="w-full">
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-
                         <FormField
                             control={form.control}
                             name="email"
@@ -177,7 +178,7 @@ export default function forms() {
                                         電話番号を編集します
                                     </FormDescription>
                                     <FormControl>
-                                        <Input placeholder="" {...field} type="text" />
+                                        <Input placeholder="090-1234-5678" {...field} type="text" />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
