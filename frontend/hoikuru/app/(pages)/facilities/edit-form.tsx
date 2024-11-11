@@ -23,7 +23,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
-import { selectFacilityAction, updateFacilityAction } from "./actions";
+import { selectFacilitiesAction,selectFacilityAction, updateFacilityAction } from "./actions";
 
 // zodによるvalidation
 const formSchema = z.object({
@@ -69,16 +69,19 @@ export default function EditForm(facility_id: number) {
     );
   }
 
-  //   保存押下時の処理
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    updateFacilityAction(
-      facility_id,
-      values.facility_name,
-      values.post_code,
-      values.address,
-      values.tel
-    );
-  }
+// 保存押下時の処理
+async function onSubmit(values: z.infer<typeof formSchema>) {
+  await updateFacilityAction({
+    id: facility_id,
+    facility_name: values.facility_name,
+    post_code: values.post_code,
+    address: values.address,
+    tel: values.tel,
+  });
+  setOpen(false);
+}
+
+
 
   return (
     <>

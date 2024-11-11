@@ -42,9 +42,9 @@ export const updateFacilityAction = async ({id,facility_name,post_code,address,t
             address:address,
             tel:tel,
         })
-        .eq('id', id); // 指定したIDの施設を更新
-        console.log(data);
-        console.log(error);
+        .eq('id', id.facility_id); // 指定したIDの施設を更新
+        console.log("data:",data);
+        console.log("error:",error);
 
     return { data, error };
 };
