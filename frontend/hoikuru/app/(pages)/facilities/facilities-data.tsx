@@ -1,8 +1,11 @@
 "use client";
-import { Button } from "@/components/ui/button";
+import { Button, } from "@/components/ui/button";
 import { selectFacilitiesAction } from "./actions";
 import { useEffect, useState } from "react";
 import EditForm from "./edit-form";
+import DeleteForm from "./delete-form";
+import { useFacilityStore } from "./store";  
+import { Skeleton } from "@/components/ui/skeleton"
 // facility-addで編集ボタンが押下されたときにonEditとしてクリックイベントを発火
 interface FacilitiesDataProps {
   facilities: Array<{
@@ -16,28 +19,17 @@ interface FacilitiesDataProps {
 }
 
 export default function FaciltiiesData() {
-  const [facilities, setFacilities] = useState<any>([]);
-
-  async function fetchFacilities() {
-    const res = selectFacilitiesAction();
-    res.then(
-      (data) => {
-        //   処理の成功時
-        setFacilities(data);
-      },
-      (data) => {
-        //   処理の失敗時
-      }
-    );
-  }
+  const { facilities, fetchFacilities } = useFacilityStore();
 
   //   読み込み時に施設情報を取得
   useEffect(() => {
-    fetchFacilities();
-  }, []);
+    if (facilities.length === 0) {
+      fetchFacilities();
+    }
+  }, [facilities, fetchFacilities]);
 
-  if (facilities.length == 0) {
-    return;
+  if (facilities.length === 0) {
+    return <Skeleton className="w-[100px] h-[20px] rounded-full" />;
   }
 
   return (
@@ -49,6 +41,7 @@ export default function FaciltiiesData() {
           <p>郵便番号: {facility.post_code}</p>
           <p>住所: {facility.address}</p>
           <EditForm facility_id={Number(facility.id)} />
+          <DeleteForm facility_id={Number(facility.id)} />
         </li>
       ))}
     </ul>

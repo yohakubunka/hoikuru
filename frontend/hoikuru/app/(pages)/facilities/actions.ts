@@ -68,13 +68,26 @@ export const selectFacilityAction = async ({facility_id}: {facility_id:number}) 
 
     const {data,error} = await supabase.from('facilities').select().eq('id',facility_id).single();
 
-    console.log('facility_id',facility_id);
-    console.log('data',data);
-    console.log('error',error);
-
     if (error){
         return false;
     }
 
     return data;
 }
+
+// 施設削除
+export const deleteFacilityAction = async (facility_id: number) => {
+    const supabase = await createClient();
+  
+    const { data, error } = await supabase
+      .from('facilities')
+      .delete()
+      .eq('id', facility_id); // IDに一致する施設を削除
+  
+    if (error) {
+      console.error('施設削除時のエラー:', error);
+      return { status: false, message: error.message };
+    }
+  
+    return { status: true, message: '施設が削除されました。' };
+  };

@@ -24,6 +24,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { selectFacilitiesAction,selectFacilityAction, updateFacilityAction } from "./actions";
+import { useFacilityStore } from "./store"; 
 
 // zodによるvalidation
 const formSchema = z.object({
@@ -42,6 +43,7 @@ const formSchema = z.object({
 
 export default function EditForm(facility_id: number) {
   const [open, setOpen] = useState(false);
+  const { fetchFacilities } = useFacilityStore();
 
   const { toast } = useToast();
   const form = useForm<z.infer<typeof formSchema>>({
@@ -78,6 +80,8 @@ async function onSubmit(values: z.infer<typeof formSchema>) {
     address: values.address,
     tel: values.tel,
   });
+  await fetchFacilities();
+
   setOpen(false);
 }
 

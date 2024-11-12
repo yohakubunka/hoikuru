@@ -25,6 +25,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { insertFacilityAction, updateFacilityAction } from "./actions";
+import { useFacilityStore } from "./store";  
 
 // zodによるvalidation
 const formSchema = z.object({
@@ -44,6 +45,8 @@ const formSchema = z.object({
 export default function FacilityAdd() {
   // ダイアログの状態を保持するstate
   const [open, setOpen] = useState(false);
+
+  const { fetchFacilities } = useFacilityStore();
 
   const { toast } = useToast();
   const form = useForm<z.infer<typeof formSchema>>({
@@ -81,6 +84,8 @@ export default function FacilityAdd() {
       toast({
         title: "追加",
       });
+    await fetchFacilities();
+
     }
 
     setOpen(false);
