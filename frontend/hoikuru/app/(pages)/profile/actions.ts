@@ -9,8 +9,8 @@ import { stat } from "fs";
 
 export const updateProfileAction = async (
     // 型定義
-    { email }: { email: string },
-    { tellNum }: { tellNum: string }
+    { email, tellNum }: { email: string; tellNum: string; },
+   
 ) => {
     const supabase = await createClient();
     // ログイン中のユーザー情報を取得
@@ -18,7 +18,7 @@ export const updateProfileAction = async (
     // 
     const { data: profileData, error: profileError } = await supabase.from('profiles').update({
         email: email,
-        tellNum:tellNum,
+        tellNum: tellNum,
     }).eq('user_id', userMeta.user.id)//user_id が userMeta.user.id と等しいデータのみを取得する
 
     if (profileError) {

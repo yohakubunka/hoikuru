@@ -66,7 +66,7 @@ export default function forms() {
     function onSubmit(values: z.infer<typeof formSchema>) {
         const res: any = updateProfileAction({
             email: values.email,
-      
+            tellNum: values.tellNum
         })
 
         res.then((data: any) => {
@@ -178,7 +178,7 @@ export default function forms() {
                                         電話番号を編集します
                                     </FormDescription>
                                     <FormControl>
-                                        <Input placeholder="090-1234-5678" {...field} type="text" />
+                                        <Input placeholder="" {...field} type="text" />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
