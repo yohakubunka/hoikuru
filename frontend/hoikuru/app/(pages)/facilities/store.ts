@@ -1,5 +1,5 @@
 import {create} from 'zustand';
-import { selectFacilitiesAction } from './actions';  // 状況に応じてインポートパスを調整
+import { selectFacilitiesAction } from './actions';
 
 interface FacilityStore {
   facilities: Array<any>;
