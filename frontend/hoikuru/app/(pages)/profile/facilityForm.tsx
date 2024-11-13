@@ -19,21 +19,26 @@ import { updateProfileAction, selectProfileAction } from './actions'
 import { useToast } from "@/hooks/use-toast"
 import { data } from "autoprefixer"
 
+// バリデーションルールの定義
 const formSchema = z.object({
     email: z.string().email(),
     lastName: z.string().optional(),
     firstName: z.string().optional(),
     lastName_kana: z.string().optional(),
     firstName_kana: z.string().optional(),
-    tellNum: z.string().optional(),
+    tellNum: z.string()
+        .regex(/^(0\d{1,4})-?(\d{1,4})-?(\d{4})$/, { message: "数字、ハイフンのみ入力可能です" })
+        .optional().nullable(),
     postCode: z.string().optional(),
     address: z.string().optional(),
 })
 
-export default function forms() {
+export default function facilityForm() {
 
     const { toast } = useToast()
-
+    // useFormを使用して、フォームの状態管理を行います。
+    //zodResolverでZodのバリデーションスキーマを適用。
+    //defaultValuesで初期値を設定しています。ユーザーがフォームを開いたとき、空の状態から始まります。
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -48,21 +53,27 @@ export default function forms() {
         },
     })
 
-
+    //selectProfileAction関数を呼び出して、ユーザープロフィールデータを取得します。
+    //データ取得後、form.setValueを使用してフォームの初期値をサーバーから取得した値で更新します。
     async function fetchUserProfile() {
         const res = selectProfileAction()
         res.then((data: any) => {
             form.setValue('email', data?.email)
             form.setValue('tellNum', data?.tellNum)
-        },(data: any) => {
+        }, (data: any) => {
 
         })
     }
 
+    //コンポーネントの初回レンダリング時にfetchUserProfileが一度だけ呼び出されます。
+    //これにより、初回表示時にサーバーからユーザーデータを取得し、フォームを初期化します。
     useEffect(() => {
         fetchUserProfile()
-    })
+    }, [])
 
+    //フォームの送信時に呼ばれる関数です。
+    //updateProfileAction関数でサーバーに更新リクエストを送信します。
+    //成功・失敗に応じて、toast関数でユーザーに通知します。
     function onSubmit(values: z.infer<typeof formSchema>) {
         const res: any = updateProfileAction({
             email: values.email,
@@ -89,13 +100,12 @@ export default function forms() {
                 variant: "destructive"
             })
         })
-
-        // console.log('res',res)
     }
 
 
     return (
         <>
+                    <h2 className="mb-4 text-4xl font-extrabold dark:text-white">プロフィール（施設）</h2>
             <div className="w-full">
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -178,7 +188,7 @@ export default function forms() {
                                         電話番号を編集します
                                     </FormDescription>
                                     <FormControl>
-                                        <Input placeholder="" {...field} type="text" />
+                                        <Input placeholder="090-1234-5678" {...field} type="text" />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
