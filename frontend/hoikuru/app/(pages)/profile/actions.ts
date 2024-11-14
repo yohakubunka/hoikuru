@@ -7,9 +7,20 @@ import { redirect } from "next/navigation";
 import { createClient as serviceCreateClient } from '@supabase/supabase-js';
 import { stat } from "fs";
 
+
+// 認証ユーザー情報を取得する共通関数
+const getAuthenticatedUser = async (supabase: any) => {
+    const { data: userMeta, error } = await supabase.auth.getUser();
+    if (error || !userMeta.user) {
+        return { user: null, error: 'ユーザー情報の取得に失敗しました' };
+    }
+    return { user: userMeta.user, error: null };
+};
+
+
 // ユーザーのプロフィール情報（メールアドレスと電話番号）を更新するための非同期関数。
 export const updateProfileAction = async (
-    { email, tellNum }: { email: string; tellNum: string; }
+    { email, tellNum }: { email: string; tellNum?: string; }
 ) => {
     const supabase = await createClient();
 
@@ -35,12 +46,11 @@ export const updateProfileAction = async (
     return { status: true, message: 'プロフィールを更新しました' };
 };
 
-
 // ユーザープロフィールを取得する関数で、データが不足している場合には、自動的にメールアドレスや電話番号を更新します。
 export const selectProfileAction = async () => {
     const supabase = await createClient();
     const { data: userMeta, error: userError } = await supabase.auth.getUser();
-    
+
     // userError が true である、または userMeta.user が存在しない場合
     if (userError || !userMeta.user) {
         return { status: false, message: 'ユーザー情報の取得に失敗しました' };

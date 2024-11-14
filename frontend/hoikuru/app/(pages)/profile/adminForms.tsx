@@ -22,15 +22,6 @@ import { data } from "autoprefixer"
 // バリデーションルールの定義
 const formSchema = z.object({
     email: z.string().email(),
-    lastName: z.string().optional(),
-    firstName: z.string().optional(),
-    lastName_kana: z.string().optional(),
-    firstName_kana: z.string().optional(),
-    tellNum: z.string()
-        .regex(/^(0\d{1,4})-?(\d{1,4})-?(\d{4})$/, { message: "数字、ハイフンのみ入力可能です" })
-        .optional().nullable(),
-    postCode: z.string().optional(),
-    address: z.string().optional(),
 })
 
 export default function adminForms() {
@@ -43,13 +34,6 @@ export default function adminForms() {
         resolver: zodResolver(formSchema),
         defaultValues: {
             email: "",
-            lastName: "",
-            firstName: "",
-            lastName_kana: "",
-            firstName_kana: "",
-            tellNum: "",
-            postCode: "",
-            address: ""
         },
     })
 
@@ -59,7 +43,6 @@ export default function adminForms() {
         const res = selectProfileAction()
         res.then((data: any) => {
             form.setValue('email', data?.email)
-            form.setValue('tellNum', data?.tellNum)
         }, (data: any) => {
 
         })
@@ -76,8 +59,7 @@ export default function adminForms() {
     //成功・失敗に応じて、toast関数でユーザーに通知します。
     function onSubmit(values: z.infer<typeof formSchema>) {
         const res: any = updateProfileAction({
-            email: values.email,
-            tellNum: values.tellNum
+            email: values.email
         })
 
         res.then((data: any) => {
@@ -112,6 +94,7 @@ export default function adminForms() {
             <h2 className="mb-4 text-4xl font-extrabold dark:text-white">プロフィール（管理者）</h2>
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                  
                         <FormField
                             control={form.control}
                             name="email"
@@ -125,106 +108,7 @@ export default function adminForms() {
                                 </FormItem>
                             )}
                         />
-                        <div className="flex justify-left items-center gap-4">
-                            <FormField
-                                control={form.control}
-                                name="lastName"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>姓</FormLabel>
-                                        <FormControl>
-                                            <Input placeholder="" {...field} type="text" />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={form.control}
-                                name="firstName"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>名</FormLabel>
-                                        <FormControl>
-                                            <Input placeholder="" {...field} type="text" />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                        </div>
-                        <div className="flex justify-left items-center gap-4">
-                            <FormField
-                                control={form.control}
-                                name="lastName_kana"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>セイ</FormLabel>
-                                        <FormControl>
-                                            <Input placeholder="" {...field} type="text" />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={form.control}
-                                name="firstName_kana"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>メイ</FormLabel>
-                                        <FormControl>
-                                            <Input placeholder="" {...field} type="text" />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                        </div>
-                        <FormField
-                            control={form.control}
-                            name="tellNum"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>電話番号</FormLabel>
-                                    <FormDescription>
-                                        電話番号を編集します
-                                    </FormDescription>
-                                    <FormControl>
-                                        <Input placeholder="090-1234-5678" {...field} type="text" />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="postCode"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>郵便番号</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder="" {...field} type="text" />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="address"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>住所</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder="" {...field} type="text" />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
                         <Button type="submit">プロフィールを変更</Button>
-
                     </form>
                 </Form>
             </div>
