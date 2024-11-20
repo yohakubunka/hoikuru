@@ -1,14 +1,14 @@
 "use server";
 import { createClient } from "@/utils/supabase/server";
 
-// 認証ユーザー情報を取得する共通関数
-// const getAuthenticatedUser = async (supabase: any) => {
-//     const { data: userMeta, error } = await supabase.auth.getUser();
-//     if (error || !userMeta.user) {
-//         return { user: null, error: 'ユーザー情報の取得に失敗しました' };
-//     }
-//     return { user: userMeta.user, error: null };
-// };
+// ユーザー認証情報を取得する共通関数
+const getAuthenticatedUser = async (supabase: ReturnType<typeof createClient>) => {
+    const { data: userMeta, error } = await supabase.auth.getUser();
+    if (error || !userMeta.user) {
+        return { user: null, error: 'ユーザー情報の取得に失敗しました' };
+    }
+    return { user: userMeta.user, error: null };
+};
 
 
 // ユーザーのプロフィール情報（メールアドレスと電話番号）を更新するための非同期関数。
@@ -18,17 +18,17 @@ export const updateProfileAction = async (
     const supabase = await createClient();
 
     // 認証情報が取得できなかった場合
-    const { data: userMeta, error: userError } = await supabase.auth.getUser();
-    if (userError || !userMeta.user) {
-        return { status: false, message: 'ユーザー情報の取得に失敗しました' };
+    const { user, error } = await getAuthenticatedUser(supabase);
+    if (error || !user) {
+        return { status: false, message: error };
     }
-
+   
     const { error: profileError } = await supabase
         .from('profiles')
         .update({
             email,
         })
-        .eq('user_id', userMeta.user.id);
+        .eq('user_id', user.id);
 
     if (profileError) {
         console.error('Error updating profile:', profileError);
@@ -44,9 +44,9 @@ export const updateFacilityAdmins = async (
     const supabase = await createClient();
 
     // 認証情報が取得できなかった場合
-    const { data: userMeta, error: userError } = await supabase.auth.getUser();
-    if (userError || !userMeta.user) {
-        return { status: false, message: 'ユーザー情報の取得に失敗しました' };
+    const { user, error } = await getAuthenticatedUser(supabase);
+    if (error || !user) {
+        return { status: false, message: error };
     }
 
     const { error: facilityAdminsError } = await supabase
@@ -60,7 +60,7 @@ export const updateFacilityAdmins = async (
             address,
             tell
         })
-        .eq('user_id', userMeta.user.id);
+        .eq('user_id', user.id);
 
     if (facilityAdminsError) {
         console.error('Error updating profile:', facilityAdminsError);
