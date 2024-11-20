@@ -95,7 +95,9 @@ export default function FacilityAdd() {
     <>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button onClick={handleAdd}>新規追加</Button>
+          <div className="flex mb-8">
+          <Button className="ml-auto" onClick={handleAdd}>新規追加</Button>
+          </div>
         </DialogTrigger>
         <DialogContent>
           <DialogHeader>
