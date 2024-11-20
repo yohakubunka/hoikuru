@@ -1,12 +1,5 @@
 "use server";
-
-import { encodedRedirect } from "@/utils/utils";
 import { createClient } from "@/utils/supabase/server";
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
-import { createClient as serviceCreateClient } from '@supabase/supabase-js';
-import { stat } from "fs";
-
 
 // 認証ユーザー情報を取得する共通関数
 // const getAuthenticatedUser = async (supabase: any) => {
@@ -20,7 +13,7 @@ import { stat } from "fs";
 
 // ユーザーのプロフィール情報（メールアドレスと電話番号）を更新するための非同期関数。
 export const updateProfileAction = async (
-    { email, tellNum}: { email: string; tellNum?: string; }
+    { email}: { email: string| null; }
 ) => {
     const supabase = await createClient();
 
@@ -34,7 +27,6 @@ export const updateProfileAction = async (
         .from('profiles')
         .update({
             email,
-            tellNum,
         })
         .eq('user_id', userMeta.user.id);
 
@@ -47,7 +39,7 @@ export const updateProfileAction = async (
 };
 // ユーザーの施設管理者情報を更新するための非同期関数。
 export const updateFacilityAdmins = async (
-    { first_name, last_name, first_name_kana, last_name_kana, post_code, address, tel }: { first_name?: string; last_name?: string;  first_name_kana?: string; last_name_kana?: string; post_code?:string; address?:string; tel?:number}
+    { first_name, last_name, first_name_kana, last_name_kana, post_code, address, tell }: { first_name?: string| null; last_name?: string| null;  first_name_kana?: string| null; last_name_kana?: string| null; post_code?:number| null; address?:string| null; tell?:number| null}
 ) => {
     const supabase = await createClient();
 
@@ -66,7 +58,7 @@ export const updateFacilityAdmins = async (
             last_name_kana,
             post_code,
             address,
-            tel
+            tell
         })
         .eq('user_id', userMeta.user.id);
 
@@ -94,7 +86,7 @@ export const selectProfileAction = async () => {
         .single();
 
     if (profileError) {
-        console.error('Error fetching profile:', profileError);
+        console.error('Error fetching profile', profileError);
         return false;
     }
 
@@ -107,15 +99,6 @@ export const selectProfileAction = async () => {
         }).eq('user_id', userMeta.user.id);
         updated = true;
     }
-
-    // 電話番号が空の場合、ユーザーの認証情報から電話番号を取得してデータベースを更新。
-    if (profileData && !profileData.tellNum && userMeta.user.tellNum) {
-        await supabase.from('profiles').update({
-            tellNum: userMeta.user.tellNum
-        }).eq('user_id', userMeta.user.id);
-        updated = true;
-    }
-
     // 更新した場合は最新のデータを取得
     if (updated) {
         const { data } = await supabase
@@ -146,13 +129,12 @@ export const selectFacilityAdmins = async () => {
         .single();
 
     if (facilityAdminsError) {
-        console.error('Error fetching profile:', facilityAdminsError);
+        console.error('Error fetching profile:aaaaaa', facilityAdminsError);
         return false;
     }
 
     let updated = false;
 
-    // メールが空の場合、ユーザーの認証情報からメールアドレスを取得してデータベースを更新。
     if (facilityAdminsData && !facilityAdminsData.first_name) {
         await supabase.from('facility_admins').update({
             first_name: userMeta.user.first_name
@@ -160,14 +142,43 @@ export const selectFacilityAdmins = async () => {
         updated = true;
     }
 
-    // 電話番号が空の場合、ユーザーの認証情報から電話番号を取得してデータベースを更新。
     if (facilityAdminsData && !facilityAdminsData.last_name && userMeta.user.last_name) {
         await supabase.from('facility_admins').update({
             last_name: userMeta.user.last_name
         }).eq('user_id', userMeta.user.id);
         updated = true;
     }
+    if (facilityAdminsData && !facilityAdminsData.first_name_kana) {
+        await supabase.from('facility_admins').update({
+            first_name: userMeta.user.first_name_kana
+        }).eq('user_id', userMeta.user.id);
+        updated = true;
+    }
 
+    if (facilityAdminsData && !facilityAdminsData.last_name_kana && userMeta.user.last_name_kana) {
+        await supabase.from('facility_admins').update({
+            last_name_kana: userMeta.user.last_name_kana
+        }).eq('user_id', userMeta.user.id);
+        updated = true;
+    }
+    if (facilityAdminsData && !facilityAdminsData.post_code && userMeta.user.post_code) {
+        await supabase.from('facility_admins').update({
+            post_code: userMeta.user.post_code
+        }).eq('user_id', userMeta.user.id);
+        updated = true;
+    }
+    if (facilityAdminsData && !facilityAdminsData.address && userMeta.user.address) {
+        await supabase.from('facility_admins').update({
+            post_code: userMeta.user.post_code
+        }).eq('user_id', userMeta.user.id);
+        updated = true;
+    }
+    if (facilityAdminsData && !facilityAdminsData.tell && userMeta.user.tell) {
+        await supabase.from('facility_admins').update({
+            tel: userMeta.user.tel
+        }).eq('user_id', userMeta.user.id);
+        updated = true;
+    }
     // 更新した場合は最新のデータを取得
     if (updated) {
         const { data } = await supabase
