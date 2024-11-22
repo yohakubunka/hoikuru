@@ -37,12 +37,14 @@ const formSchema = z.object({
     .string()
     .regex(/^\d{3}-\d{4}$/, "郵便番号は「123-4567」の形式で入力してください"),
   address: z.string().max(100, "住所は100文字以内で入力してください"),
-  tel: z
+  tell: z
     .string()
     .regex(
       /^(0[0-9]{1,4}-[0-9]{1,4}-[0-9]{4}|0[0-9]{9,10})$/,
       "電話番号は「0X-XXXX-XXXX」または「0XXXXXXXXX」の形式で入力してください"
     ),
+    email : z.string().nonempty("メールアドレスは必須です。"),
+    password: z.string().nonempty("パスワードは必須です。"),
 });
 
 export default function FacilityAdminAdd() {
@@ -61,7 +63,9 @@ export default function FacilityAdminAdd() {
       last_name_kana: "",
       post_code: "",
       address: "",
-      tel: "",
+      tell: "",
+      email: "",
+      password:"",
     },
   });
 
@@ -81,7 +85,9 @@ export default function FacilityAdminAdd() {
       last_name_kana: values.last_name_kana,
       post_code: values.post_code,
       address: values.address,
-      tel: values.tel,
+      tell: values.tell,
+      email : values.email,
+      password : values.password,
     });
 
     if (!res.status) {
@@ -190,7 +196,36 @@ export default function FacilityAdminAdd() {
                 </div>
                 <FormField
                   control={form.control}
-                  name="tel"
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>メールアドレス</FormLabel>
+                      <FormControl>
+                        <Input placeholder="" {...field} type="text" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+
+<FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>パスワード</FormLabel>
+                      <FormControl>
+                        <Input placeholder="" {...field} type="text" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="tell"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>電話番号</FormLabel>
