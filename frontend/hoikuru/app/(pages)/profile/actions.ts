@@ -196,37 +196,27 @@ export const updateFacilities = async (updates: {
 };
 
 // 施設情報を取得する関数
-export const selectFacilities = async () => {
-    const supabase = await createClient();
-    const { user, error } = await getAuthenticatedUser(supabase);
-    if (error || !user) return { status: false, message: error };
 
+
+export const selectFacilities = async () => {
+    const supabase = createClient(); // Initialize Supabase client
+    const { user, error } = await getAuthenticatedUser(supabase);
+
+    if (error || !user) {
+        return { status: false, message: error || "User not authenticated" };
+    }
+
+    // Fetch facilities for which the user is an admin
     const { data: FacilitiesData, error: FacilitiesError } = await supabase
-        .from("facilities")
-        .select()
-        .eq("id", user.id)
-        .single();
+    .from("facility_admins")
+    .select(`facility_id,
+        facilities(*)`) // リレーションを利用して関連データを取得
+    .eq("facility_id", user.id).single();;
 
     if (FacilitiesError) {
         console.error("Error fetching facilities:", FacilitiesError);
         return { status: false, message: FacilitiesError.message };
     }
 
-    // 保護者アカウントデータを更新
-    const updates: Record<string, any> = {};
-    const fields = ["facility_name", "post_code", "address", "tell"];
-    fields.forEach((field) => {
-        if (!FacilitiesData[field] && user[field]) {
-            updates[field] = user[field];
-        }
-    });
-
-    if (Object.keys(updates).length > 0) {
-        const updateResult = await updateTable(supabase, "facilities", updates, user.id);
-        if (!updateResult.status) return updateResult;
-
-        return await supabase.from("facilities").select().eq("user_id", user.id).single();
-    }
-
-    return FacilitiesData;
+    return { status: true, data: FacilitiesData };
 };

@@ -151,7 +151,7 @@ export default function facilityForm() {
                         />
                         <FormField
                             control={form.control}
-                            name="tellNum"
+                            name="facility_name"
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>施設名</FormLabel>
@@ -168,7 +168,7 @@ export default function facilityForm() {
 
                         <FormField
                             control={form.control}
-                            name="tellNum"
+                            name="tell"
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>電話番号</FormLabel>
@@ -184,7 +184,7 @@ export default function facilityForm() {
                         />
                         <FormField
                             control={form.control}
-                            name="postCode"
+                            name="post_code"
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>郵便番号</FormLabel>
