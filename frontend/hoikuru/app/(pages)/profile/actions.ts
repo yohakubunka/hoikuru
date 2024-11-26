@@ -1,5 +1,4 @@
 "use server";
-
 import { createClient } from "@/utils/supabase/server";
 
 // 共通のユーザー認証情報取得関数
@@ -10,6 +9,7 @@ const getAuthenticatedUser = async (supabase: ReturnType<typeof createClient>) =
     }
     return { user: userMeta.user, error: null };
 };
+
 
 // updateTable関数|共通の更新関数
 // データベーステーブルを更新するための汎用関数。
@@ -152,13 +152,13 @@ export const selectFacilityMember = async () => {
     if (error || !user) return { status: false, message: error };
 
     const { data: facilityMembersData, error: facilityMembersError } = await supabase
-        .from("facility_member")
+        .from("facility_members")
         .select()
         .eq("user_id", user.id)
         .single();
 
     if (facilityMembersError) {
-        console.error("Error fetching facility_member:", facilityMembersError);
+        console.error("Error fetching facility_members:", facilityMembersError);
         return { status: false, message: facilityMembersError.message };
     }
 
@@ -172,11 +172,61 @@ export const selectFacilityMember = async () => {
     });
 
     if (Object.keys(updates).length > 0) {
-        const updateResult = await updateTable(supabase, "facility_admins", updates, user.id);
+        const updateResult = await updateTable(supabase, "facility_members", updates, user.id);
         if (!updateResult.status) return updateResult;
 
-        return await supabase.from("facility_admins").select().eq("user_id", user.id).single();
+        return await supabase.from("facility_members").select().eq("user_id", user.id).single();
     }
 
     return facilityMembersData;
+};
+
+// 施設情報を更新する関数
+export const updateFacilities = async (updates: {
+    facility_name?: number | null;
+    post_code?: number | null;
+    address?: string | null;
+    tell?: number | null;
+}) => {
+    const supabase = await createClient();
+    const { user, error } = await getAuthenticatedUser(supabase);
+    if (error || !user) return { status: false, message: error };
+
+    return await updateTable(supabase, "facilities", updates, user.id);
+};
+
+// 施設情報を取得する関数
+export const selectFacilities = async () => {
+    const supabase = await createClient();
+    const { user, error } = await getAuthenticatedUser(supabase);
+    if (error || !user) return { status: false, message: error };
+
+    const { data: FacilitiesData, error: FacilitiesError } = await supabase
+        .from("facilities")
+        .select()
+        .eq("id", user.id)
+        .single();
+
+    if (FacilitiesError) {
+        console.error("Error fetching facilities:", FacilitiesError);
+        return { status: false, message: FacilitiesError.message };
+    }
+
+    // 保護者アカウントデータを更新
+    const updates: Record<string, any> = {};
+    const fields = ["facility_name", "post_code", "address", "tell"];
+    fields.forEach((field) => {
+        if (!FacilitiesData[field] && user[field]) {
+            updates[field] = user[field];
+        }
+    });
+
+    if (Object.keys(updates).length > 0) {
+        const updateResult = await updateTable(supabase, "facilities", updates, user.id);
+        if (!updateResult.status) return updateResult;
+
+        return await supabase.from("facilities").select().eq("user_id", user.id).single();
+    }
+
+    return FacilitiesData;
 };

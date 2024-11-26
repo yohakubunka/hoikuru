@@ -34,6 +34,9 @@ export default async function profile() {
                 <div>
                     <FacilityAdminsForm />
                 </div>
+                <div>
+                    <FacilityForm />
+                </div>
             </>
         )
     }
@@ -47,16 +50,7 @@ export default async function profile() {
             </>
         )
     }
-    // ロール:4 施設データ
-    if (profileData.role == 4) {
-        return (
-            <>
-                <div>
-                    <FacilityForm />
-                </div>
-            </>
-        )
-    }
+  
     return (
         <>
             <div>

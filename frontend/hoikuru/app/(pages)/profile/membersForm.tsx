@@ -59,18 +59,18 @@ export default function facilityAdminsForm() {
         const resProfile = selectProfileAction()
         const resFacilityMember = selectFacilityMember()
         resProfile.then((data: any) => {
-            form.setValue('email', data?.email)
+            form.setValue('email', data?.email ?? "")
         }, (data: any) => {
 
         })
         resFacilityMember.then((data: any) => {
-            form.setValue('last_name', data?.last_name)
-            form.setValue('first_name', data?.first_name)
-            form.setValue('last_name_kana', data?.last_name_kana)
-            form.setValue('first_name_kana', data?.first_name_kana)
-            form.setValue('post_code', data?.post_code)
-            form.setValue('address', data?.address)
-            form.setValue('tell', data?.tell)
+            form.setValue('last_name', data?.last_name ?? "")
+            form.setValue('first_name', data?.first_name ?? "")
+            form.setValue('last_name_kana', data?.last_name_kana ?? "")
+            form.setValue('first_name_kana', data?.first_name_kana ?? "")
+            form.setValue('post_code', data?.post_code ?? "")
+            form.setValue('address', data?.address ?? "")
+            form.setValue('tell', data?.tell ?? "")
         }, (data: any) => {
 
         })
@@ -89,6 +89,7 @@ export default function facilityAdminsForm() {
         const resProfile: any = updateProfileAction({
             email: values.email,
         })
+
         const resFacilityMember: any = updateFacilityMember({
             last_name: values.last_name,
             first_name: values.first_name,
