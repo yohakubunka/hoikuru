@@ -25,7 +25,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { insertFacilityAdminAction, updateFacilityAdminAction } from "./actions";
-import { useFacilityStore } from "./store";
+import { useFacilityAdminStore } from "./store";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { selectFacilitiesAction } from "../facilities/actions";
 
 // zodによるvalidation
 const formSchema = z.object({
@@ -43,15 +45,16 @@ const formSchema = z.object({
       /^(0[0-9]{1,4}-[0-9]{1,4}-[0-9]{4}|0[0-9]{9,10})$/,
       "電話番号は「0X-XXXX-XXXX」または「0XXXXXXXXX」の形式で入力してください"
     ),
-    email : z.string().nonempty("メールアドレスは必須です。"),
-    password: z.string().nonempty("パスワードは必須です。"),
+  email: z.string().nonempty("メールアドレスは必須です。"),
+  password: z.string().nonempty("パスワードは必須です。"),
+  facility_id:z.string(),
 });
 
 export default function FacilityAdminAdd() {
   // ダイアログの状態を保持するstate
   const [open, setOpen] = useState(false);
 
-  const { fetchFacilities } = useFacilityStore();
+  const { fetchFacilityAdmins } = useFacilityAdminStore();
 
   const { toast } = useToast();
   const form = useForm<z.infer<typeof formSchema>>({
@@ -65,7 +68,8 @@ export default function FacilityAdminAdd() {
       address: "",
       tell: "",
       email: "",
-      password:"",
+      password: "",
+      facility_id:"",
     },
   });
 
@@ -74,6 +78,8 @@ export default function FacilityAdminAdd() {
     setOpen(true);
     form.reset();
   };
+
+
 
   //   保存押下時の処理
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -86,25 +92,45 @@ export default function FacilityAdminAdd() {
       post_code: values.post_code,
       address: values.address,
       tell: values.tell,
-      email : values.email,
-      password : values.password,
+      email: values.email,
+      password: values.password,
+      facility_id: values.facility_id
     });
+
 
     if (!res.status) {
       toast({
         title: "エラー",
+        description: res.message || "予期しないエラーが発生しました", // エラーメッセージを表示
         variant: "destructive",
       });
     } else {
       toast({
         title: "追加",
       });
-      await fetchFacilities();
-
+      await fetchFacilityAdmins();
+      setOpen(false);
     }
-
-    setOpen(false);
   }
+
+  const [facilities, setFacilities] = useState([]);
+
+  // 施設データの取得
+  useEffect(() => {
+    const fetchFacilities = async () => {
+      const data: any = await selectFacilitiesAction();
+      if (data) {
+        setFacilities(data);
+      } else {
+        toast({
+          title: "エラー",
+          description: "施設データの取得に失敗しました。",
+          variant: "destructive",
+        });
+      }
+    };
+    fetchFacilities();
+  }, [toast]);
 
   return (
     <>
@@ -114,85 +140,82 @@ export default function FacilityAdminAdd() {
             <Button className="ml-auto" onClick={handleAdd}>新規追加</Button>
           </div>
         </DialogTrigger>
-        <DialogContent>
+        <DialogContent className="max-h-[90%] overflow-hidden">
           <DialogHeader>
             <DialogTitle>施設管理者の新規追加</DialogTitle>
             <DialogDescription>施設管理者の新規追加を行います。</DialogDescription>
           </DialogHeader>
 
-          <div>
+          <div className="flex flex-col space-y-4 overflow-y-scroll">
             <Form {...form}>
               <form
                 onSubmit={form.handleSubmit(onSubmit)}
                 className="space-y-8"
               >
                 <div className="flex">
-                  <FormField
-                    control={form.control}
-                    name="first_name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>管理者名（性）</FormLabel>
-                        <FormControl>
-                          <Input placeholder="" {...field} type="text" />
-                        </FormControl>
-                        <FormDescription>
-                          管理者名（性）を入力してください。
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="last_name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>管理者名（名）</FormLabel>
-                        <FormControl>
-                          <Input placeholder="" {...field} type="text" />
-                        </FormControl>
-                        <FormDescription>
-                          管理者名（名）を入力してください。
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <div className="mr-2 w-full">
+                    <FormField
+                      control={form.control}
+                      name="first_name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>管理者名（性）</FormLabel>
+                          <FormControl>
+                            <Input placeholder="" {...field} type="text" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="w-full">
+                    <FormField
+                      control={form.control}
+                      name="last_name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>管理者名（名）</FormLabel>
+                          <FormControl>
+                            <Input placeholder="" {...field} type="text" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 </div>
                 <div className="flex">
-                  <FormField
-                    control={form.control}
-                    name="first_name_kana"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>管理者名（せい）</FormLabel>
-                        <FormControl>
-                          <Input placeholder="" {...field} type="text" />
-                        </FormControl>
-                        <FormDescription>
-                          管理者名（せい）を入力してください。
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="last_name_kana"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>管理者名（めい）</FormLabel>
-                        <FormControl>
-                          <Input placeholder="" {...field} type="text" />
-                        </FormControl>
-                        <FormDescription>
-                          管理者名（めい）を入力してください。
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <div className="mr-2 w-full">
+                    <FormField
+                      control={form.control}
+                      name="first_name_kana"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>管理者名（せい）</FormLabel>
+                          <FormControl>
+                            <Input placeholder="" {...field} type="text" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="w-full">
+                    <FormField
+                      control={form.control}
+                      name="last_name_kana"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>管理者名（めい）</FormLabel>
+                          <FormControl>
+                            <Input placeholder="" {...field} type="text" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 </div>
                 <FormField
                   control={form.control}
@@ -209,7 +232,7 @@ export default function FacilityAdminAdd() {
                 />
 
 
-<FormField
+                <FormField
                   control={form.control}
                   name="password"
                   render={({ field }) => (
@@ -264,6 +287,33 @@ export default function FacilityAdminAdd() {
                     </FormItem>
                   )}
                 />
+
+                <FormField
+                  control={form.control}
+                  name="facility_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>施設</FormLabel>
+                      <FormControl>
+                        <Select onValueChange={(value) => field.onChange(value)} value={field.value}>
+                          <SelectTrigger>
+                            <SelectValue/>
+                          </SelectTrigger>
+                          <SelectContent>
+                            {facilities.map((facility) => (
+                              <SelectItem key={facility.id} value={facility.id.toString()}>
+                                {facility.facility_name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
 
                 <Button type="submit">追加</Button>
               </form>

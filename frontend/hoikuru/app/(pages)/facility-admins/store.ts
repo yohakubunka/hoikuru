@@ -1,19 +1,19 @@
 import {create} from 'zustand';
-import { selectFacilitiesAction } from './actions';
+import { selectFacilityAdminsAction } from './actions';
 
-interface FacilityStore {
-  facilities: Array<any>;
-  setFacilities: (facilities: Array<any>) => void;
-  fetchFacilities: () => Promise<void>;
+interface FacilityAdminStore {
+  FacilitiyAdmins: Array<any>;
+  setFacilitiyAdmins: (FacilitiyAdmins: Array<any>) => void;
+  fetchFacilityAdmins: () => Promise<void>;
 }
 
-export const useFacilityStore = create<FacilityStore>((set:any) => ({
-  facilities: [],
-  setFacilities: (facilities:any) => set({ facilities }),
-  fetchFacilities: async () => {
-    const facilities = await selectFacilitiesAction();
-    if (facilities) {
-      set({ facilities });
+export const useFacilityAdminStore = create<FacilityAdminStore>((set:any) => ({
+  FacilitiyAdmins: [],
+  setFacilitiyAdmins: (FacilitiyAdmins:any) => set({ FacilitiyAdmins }),
+  fetchFacilityAdmins: async () => {
+    const FacilitiyAdmins = await selectFacilityAdminsAction();
+    if (FacilitiyAdmins) {
+      set({ FacilitiyAdmins });
     } else {
       console.error('施設情報の取得に失敗しました');
     }

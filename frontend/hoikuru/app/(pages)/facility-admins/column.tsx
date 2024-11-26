@@ -3,22 +3,30 @@ import EditForm from "./edit-form";
 import DeleteForm from "./delete-form";
 
 // Facility の型を定義
-export interface Facility {
+export interface FacilityAdmin {
   id: string;
-  facility_name: string;
+  first_name: string;
+  last_name: string;
+  first_name_kana: string;
+  last_name_kana: string;
   tel: string;
   post_code: string;
   address: string;
 }
 
 // カラム定義を作成
-export const columns: ColumnDef<Facility>[] = [
+export const columns: ColumnDef<FacilityAdmin>[] = [
   {
-    accessorKey: "facility_name",
+    accessorKey: "first_name",
     header: "施設名",
+    cell: ({ row }) => {
+      // first_name と last_name を結合して表示
+      const { first_name, last_name } = row.original;
+      return `${first_name} ${last_name}`;
+    },
   },
   {
-    accessorKey: "tel",
+    accessorKey: "tell",
     header: "電話番号",
   },
   {
@@ -34,8 +42,8 @@ export const columns: ColumnDef<Facility>[] = [
     header: "操作",
     cell: ({ row }) => (
       <div className="flex gap-2">
-        <EditForm facility_id={Number(row.original.id)} />
-        <DeleteForm facility_id={Number(row.original.id)} />
+        <EditForm facility_admin_id={Number(row.original.id)} />
+        <DeleteForm facility_admin_id={Number(row.original.id)} />
       </div>
     ),
   },

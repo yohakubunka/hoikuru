@@ -7,7 +7,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import {
   Form,
@@ -23,49 +23,62 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
-import { selectFacilitiesAction,selectFacilityAction, updateFacilityAction } from "./actions";
-import { useFacilityStore } from "./store"; 
+import { selectFacilityAdminsAction,selectFacilityAdminAction, updateFacilityAdminAction } from "./actions";
+import { useFacilityAdminStore } from "./store"; 
+import { selectFacilitiesAction } from "../facilities/actions";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 
 // zodによるvalidation
 const formSchema = z.object({
-  facility_name: z.string().nonempty("施設名は必須です"),
+  first_name: z.string().nonempty("名前（性）は必須です。"),
+  last_name: z.string().nonempty("名前（名）は必須です"),
+  first_name_kana: z.string().nonempty("名前（せい）は必須です"),
+  last_name_kana: z.string().nonempty("名前（めい）は必須です"),
   post_code: z
     .string()
     .regex(/^\d{3}-\d{4}$/, "郵便番号は「123-4567」の形式で入力してください"),
   address: z.string().max(100, "住所は100文字以内で入力してください"),
-  tel: z
+  tell: z
     .string()
     .regex(
       /^(0[0-9]{1,4}-[0-9]{1,4}-[0-9]{4}|0[0-9]{9,10})$/,
       "電話番号は「0X-XXXX-XXXX」または「0XXXXXXXXX」の形式で入力してください"
     ),
+  facility_id:z.string(),
 });
 
-export default function EditForm(facility_id: number) {
+export default function EditForm(facility_admin_id: number) {
   const [open, setOpen] = useState(false);
-  const { fetchFacilities } = useFacilityStore();
+  const { fetchFacilityAdmins } = useFacilityAdminStore();
 
   const { toast } = useToast();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      facility_name: "",
+      first_name: "",
+      last_name: "",
+      first_name_kana: "",
+      last_name_kana: "",
       post_code: "",
       address: "",
-      tel: "",
+      tell: "",
+      facility_id:"",
     },
   });
 
   //   施設情報の取得関数
   async function fecthFacility() {
-    const res = selectFacilityAction(facility_id);
+    const res = selectFacilityAdminAction(facility_admin_id);
     res.then(
       (data) => {
-        console.log(data);
-        form.setValue("facility_name", data.facility_name);
+        form.setValue("first_name", data.first_name);
+        form.setValue("last_name", data.last_name);
+        form.setValue("first_name_kana", data.first_name_kana);
+        form.setValue("last_name_kana", data.last_name_kana);
         form.setValue("post_code", data.post_code);
         form.setValue("address", data.address);
-        form.setValue("tel", data.tel);
+        form.setValue("tell", data.tell);
+        form.setValue("facility_id", data.facility_id);
       },
       (data) => {}
     );
@@ -73,17 +86,40 @@ export default function EditForm(facility_id: number) {
 
 // 保存押下時の処理
 async function onSubmit(values: z.infer<typeof formSchema>) {
-  await updateFacilityAction({
-    id: facility_id,
-    facility_name: values.facility_name,
-    post_code: values.post_code,
-    address: values.address,
-    tel: values.tel,
+  await updateFacilityAdminAction({
+    id:facility_admin_id,
+      first_name: values.first_name,
+      last_name: values.last_name,
+      first_name_kana: values.first_name_kana,
+      last_name_kana: values.last_name_kana,
+      post_code: values.post_code,
+      address: values.address,
+      tell: values.tell,
+      facility_id: values.facility_id,
   });
-  await fetchFacilities();
+  await fetchFacilityAdmins();
 
   setOpen(false);
 }
+
+const [facilities, setFacilities] = useState([]);
+
+// 施設データの取得
+useEffect(() => {
+  const fetchFacilities = async () => {
+    const data: any = await selectFacilitiesAction();
+    if (data) {
+      setFacilities(data);
+    } else {
+      toast({
+        title: "エラー",
+        description: "施設データの取得に失敗しました。",
+        variant: "destructive",
+      });
+    }
+  };
+  fetchFacilities();
+}, [toast]);
 
 
 
@@ -95,74 +131,153 @@ async function onSubmit(values: z.infer<typeof formSchema>) {
         </DialogTrigger>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>施設の編集</DialogTitle>
-            <DialogDescription>施設の編集を行います。</DialogDescription>
+            <DialogTitle>施設管理者の編集</DialogTitle>
+            <DialogDescription>施設管理者の編集を行います。</DialogDescription>
           </DialogHeader>
 
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-              <FormField
-                control={form.control}
-                name="facility_name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>施設名</FormLabel>
-                    <FormControl>
-                      <Input placeholder="" {...field} type="text" />
-                    </FormControl>
-                    <FormDescription>
-                      施設名を入力してください。
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-8"
+              >
+                <div className="flex">
+                  <div className="mr-2 w-full">
+                    <FormField
+                      control={form.control}
+                      name="first_name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>管理者名（性）</FormLabel>
+                          <FormControl>
+                            <Input placeholder="" {...field} type="text" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
-              <FormField
-                control={form.control}
-                name="tel"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>電話番号</FormLabel>
-                    <FormControl>
-                      <Input placeholder="" {...field} type="text" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  <div className="w-full">
+                    <FormField
+                      control={form.control}
+                      name="last_name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>管理者名（名）</FormLabel>
+                          <FormControl>
+                            <Input placeholder="" {...field} type="text" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+                <div className="flex">
+                  <div className="mr-2 w-full">
+                    <FormField
+                      control={form.control}
+                      name="first_name_kana"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>管理者名（せい）</FormLabel>
+                          <FormControl>
+                            <Input placeholder="" {...field} type="text" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="w-full">
+                    <FormField
+                      control={form.control}
+                      name="last_name_kana"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>管理者名（めい）</FormLabel>
+                          <FormControl>
+                            <Input placeholder="" {...field} type="text" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
 
-              <FormField
-                control={form.control}
-                name="post_code"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>郵便番号</FormLabel>
-                    <FormControl>
-                      <Input placeholder="" {...field} type="text" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                <FormField
+                  control={form.control}
+                  name="tell"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>電話番号</FormLabel>
+                      <FormControl>
+                        <Input placeholder="" {...field} type="text" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <FormField
-                control={form.control}
-                name="address"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>住所</FormLabel>
-                    <FormControl>
-                      <Input placeholder="" {...field} type="text" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                <FormField
+                  control={form.control}
+                  name="post_code"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>郵便番号</FormLabel>
+                      <FormControl>
+                        <Input placeholder="" {...field} type="text" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <Button type="submit">編集</Button>
-            </form>
-          </Form>
+                <FormField
+                  control={form.control}
+                  name="address"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>住所</FormLabel>
+                      <FormControl>
+                        <Input placeholder="" {...field} type="text" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                
+<FormField
+                  control={form.control}
+                  name="facility_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>施設</FormLabel>
+                      <FormControl>
+                        <Select onValueChange={(value) => field.onChange(value)} value={field.value}>
+                          <SelectTrigger>
+                            <SelectValue/>
+                          </SelectTrigger>
+                          <SelectContent>
+                            {facilities.map((facility) => (
+                              <SelectItem key={facility.id} value={facility.id.toString()}>
+                                {facility.facility_name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <Button type="submit">保存</Button>
+              </form>
+            </Form>
         </DialogContent>
       </Dialog>
     </>

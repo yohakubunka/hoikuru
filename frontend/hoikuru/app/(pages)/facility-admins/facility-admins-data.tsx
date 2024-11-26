@@ -1,24 +1,28 @@
 "use client";
 
 import { useEffect } from "react";
-import { useFacilityStore } from "./store";
+import { useFacilityAdminStore } from "./store";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataTable } from "./data-table";
-import { columns,Facility } from "./column"; // カラム定義をインポート
+import { columns,FacilityAdmin } from "./column"; // カラム定義をインポート
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table"
 
 export default function FacilityAdminsData() {
-  const { facilities, fetchFacilities } = useFacilityStore();
+  const { FacilitiyAdmins, fetchFacilityAdmins } = useFacilityAdminStore();
 
-  // 初回ロード時に施設情報を取得
   useEffect(() => {
-    if (facilities.length === 0) {
-      fetchFacilities();
+    // 初回ロード時にのみデータを取得
+    if (FacilitiyAdmins.length === 0) {
+      fetchFacilityAdmins();
     }
-  }, [facilities, fetchFacilities]);
+  }, []); // 空の依存配列で、最初のレンダリング時にのみ実行
+  
+
+  console.log(FacilitiyAdmins);
+  
 
   // ローディング中のスケルトン表示
-  if (facilities.length === 0) {
+  if (FacilitiyAdmins.length === 0) {
     return      <div className="border rounded-lg w-full">
     <div className="relative w-full overflow-auto">
       <Table>
@@ -117,7 +121,7 @@ export default function FacilityAdminsData() {
 
   return (
     <div className="">
-      <DataTable<Facility> columns={columns} data={facilities} />
+      <DataTable<FacilityAdmin> columns={columns} data={FacilitiyAdmins} />
     </div>
   );
 }
