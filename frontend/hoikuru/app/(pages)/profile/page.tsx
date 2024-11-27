@@ -17,7 +17,7 @@ export default async function profile() {
     const { data: profileData, error: profileError } = await supabase.from('profiles').select().eq('user_id', userMeta.user.id).single();
 
     // const {data: profile} = supabase.from('profiles').select().eq('user_id', user.data.user?.id).single()
-
+    // ロール:1 サービス管理者（余白）
     if (profileData.role == 1) {
         return (
             <>
@@ -27,17 +27,20 @@ export default async function profile() {
             </>
         )
     }
-
+    // ロール:2 施設管理者
     if (profileData.role == 2) {
         return (
             <>
                 <div>
                     <FacilityAdminsForm />
                 </div>
+                <div>
+                    <FacilityForm />
+                </div>
             </>
         )
     }
-
+    // ロール:3　保護者
     if (profileData.role == 3) {
         return (
             <>
@@ -47,20 +50,11 @@ export default async function profile() {
             </>
         )
     }
-
-    if (profileData.role == 4) {
-        return (
-            <>
-                <div>
-                    <FacilityForm />
-                </div>
-            </>
-        )
-    }
+  
     return (
         <>
             <div>
-             <p>アカウント情報が正しくありません</p>
+                <p>アカウント情報が正しくありません</p>
             </div>
         </>
     );

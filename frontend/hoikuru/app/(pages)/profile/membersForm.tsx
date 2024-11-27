@@ -15,25 +15,25 @@ import {
     FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { updateProfileAction, selectProfileAction } from './actions'
+import { selectProfileAction, updateProfileAction, selectFacilityMember, updateFacilityMember } from './actions'
 import { useToast } from "@/hooks/use-toast"
 import { data } from "autoprefixer"
 
 // バリデーションルールの定義
 const formSchema = z.object({
     email: z.string().email(),
-    lastName: z.string().optional(),
-    firstName: z.string().optional(),
-    lastName_kana: z.string().optional(),
-    firstName_kana: z.string().optional(),
-    tellNum: z.string()
+    last_name: z.string().optional().nullable(),
+    first_name: z.string().optional().nullable(),
+    first_name_kana: z.string().optional().nullable(),
+    last_name_kana: z.string().optional().nullable(),
+    tell: z.string()
         .regex(/^(0\d{1,4})-?(\d{1,4})-?(\d{4})$/, { message: "数字、ハイフンのみ入力可能です" })
         .optional().nullable(),
-    postCode: z.string().optional(),
-    address: z.string().optional(),
+    post_code: z.string().optional().nullable(),
+    address: z.string().optional().nullable(),
 })
 
-export default function membersForm() {
+export default function facilityAdminsForm() {
 
     const { toast } = useToast()
     // useFormを使用して、フォームの状態管理を行います。
@@ -43,12 +43,12 @@ export default function membersForm() {
         resolver: zodResolver(formSchema),
         defaultValues: {
             email: "",
-            lastName: "",
-            firstName: "",
-            lastName_kana: "",
-            firstName_kana: "",
-            tellNum: "",
-            postCode: "",
+            last_name: "",
+            first_name: "",
+            first_name_kana: "",
+            last_name_kana: "",
+            tell: "",
+            post_code: "",
             address: ""
         },
     })
@@ -56,10 +56,21 @@ export default function membersForm() {
     //selectProfileAction関数を呼び出して、ユーザープロフィールデータを取得します。
     //データ取得後、form.setValueを使用してフォームの初期値をサーバーから取得した値で更新します。
     async function fetchUserProfile() {
-        const res = selectProfileAction()
-        res.then((data: any) => {
-            form.setValue('email', data?.email)
-            form.setValue('tellNum', data?.tellNum)
+        const resProfile = selectProfileAction()
+        const resFacilityMember = selectFacilityMember()
+        resProfile.then((data: any) => {
+            form.setValue('email', data?.email ?? "")
+        }, (data: any) => {
+
+        })
+        resFacilityMember.then((data: any) => {
+            form.setValue('last_name', data?.last_name ?? "")
+            form.setValue('first_name', data?.first_name ?? "")
+            form.setValue('last_name_kana', data?.last_name_kana ?? "")
+            form.setValue('first_name_kana', data?.first_name_kana ?? "")
+            form.setValue('post_code', data?.post_code ?? "")
+            form.setValue('address', data?.address ?? "")
+            form.setValue('tell', data?.tell ?? "")
         }, (data: any) => {
 
         })
@@ -75,15 +86,23 @@ export default function membersForm() {
     //updateProfileAction関数でサーバーに更新リクエストを送信します。
     //成功・失敗に応じて、toast関数でユーザーに通知します。
     function onSubmit(values: z.infer<typeof formSchema>) {
-        const res: any = updateProfileAction({
+        const resProfile: any = updateProfileAction({
             email: values.email,
-            tellNum: values.tellNum
         })
 
-        res.then((data: any) => {
+        const resFacilityMember: any = updateFacilityMember({
+            last_name: values.last_name,
+            first_name: values.first_name,
+            last_name_kana: values.last_name_kana,
+            first_name_kana: values.first_name_kana,
+            post_code: values.post_code,
+            address: values.address,
+            tell: values.tell,
+        })
+        resProfile.then((data: any) => {
             if (!data.status) {
                 toast({
-                    title: "エラー",
+                    title: "エラー(ユーザープロフィール)",
                     // description: values.message,
                     variant: "destructive"
                 })
@@ -100,7 +119,26 @@ export default function membersForm() {
                 variant: "destructive"
             })
         })
-
+        resFacilityMember.then((data: any) => {
+            if (!data.status) {
+                toast({
+                    title: "エラー(保護者)",
+                    // description: values.message,
+                    variant: "destructive"
+                })
+            } else {
+                toast({
+                    title: "追加",
+                    description: data.message,
+                })
+            }
+        }, (data: any) => {
+            toast({
+                title: "通信エラー",
+                // description: values.message,
+                variant: "destructive"
+            })
+        })
         // console.log('res',res)
     }
 
@@ -127,7 +165,7 @@ export default function membersForm() {
                         <div className="flex justify-left items-center gap-4">
                             <FormField
                                 control={form.control}
-                                name="lastName"
+                                name="last_name"
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>姓</FormLabel>
@@ -140,7 +178,7 @@ export default function membersForm() {
                             />
                             <FormField
                                 control={form.control}
-                                name="firstName"
+                                name="first_name"
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>名</FormLabel>
@@ -155,7 +193,7 @@ export default function membersForm() {
                         <div className="flex justify-left items-center gap-4">
                             <FormField
                                 control={form.control}
-                                name="lastName_kana"
+                                name="last_name_kana"
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>セイ</FormLabel>
@@ -168,7 +206,7 @@ export default function membersForm() {
                             />
                             <FormField
                                 control={form.control}
-                                name="firstName_kana"
+                                name="first_name_kana"
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>メイ</FormLabel>
@@ -182,7 +220,7 @@ export default function membersForm() {
                         </div>
                         <FormField
                             control={form.control}
-                            name="tellNum"
+                            name="tell"
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>電話番号</FormLabel>
@@ -198,7 +236,7 @@ export default function membersForm() {
                         />
                         <FormField
                             control={form.control}
-                            name="postCode"
+                            name="post_code"
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>郵便番号</FormLabel>
