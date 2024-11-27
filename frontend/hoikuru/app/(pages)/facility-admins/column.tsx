@@ -18,7 +18,7 @@ export interface FacilityAdmin {
 export const columns: ColumnDef<FacilityAdmin>[] = [
   {
     accessorKey: "first_name",
-    header: "施設名",
+    header: "管理者名",
     cell: ({ row }) => {
       // first_name と last_name を結合して表示
       const { first_name, last_name } = row.original;
@@ -36,6 +36,11 @@ export const columns: ColumnDef<FacilityAdmin>[] = [
   {
     accessorKey: "address",
     header: "住所",
+  },
+  {
+    accessorKey: "facility_name",
+    header: "施設",
+    cell: ({ row }) => row.original.facility_name || "未設定",
   },
   {
     id: "actions",

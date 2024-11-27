@@ -24,17 +24,38 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { insertFacilityAdminAction, updateFacilityAdminAction } from "./actions";
+import {
+  insertFacilityAdminAction,
+  updateFacilityAdminAction,
+} from "./actions";
 import { useFacilityAdminStore } from "./store";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 import { selectFacilitiesAction } from "../facilities/actions";
 
 // zodによるvalidation
 const formSchema = z.object({
-  first_name: z.string().nonempty("名前（性）は必須です。"),
-  last_name: z.string().nonempty("名前（名）は必須です"),
-  first_name_kana: z.string().nonempty("名前（せい）は必須です"),
-  last_name_kana: z.string().nonempty("名前（めい）は必須です"),
+  first_name: z.string().min(1, "名前（性）は必須です。"),
+  last_name: z.string().min(1, "名前（名）は必須です。"),
+  first_name_kana: z
+    .string()
+    .regex(
+      /^[\u3041-\u3096ー]+$/,
+      "名前（せい）は全角ひらがなで入力してください"
+    )
+    .min(1, "名前（せい）は必須です。"),
+  last_name_kana: z
+    .string()
+    .regex(
+      /^[\u3041-\u3096ー]+$/,
+      "名前（めい）は全角ひらがなで入力してください"
+    )
+    .min(1, "名前（めい）は必須です。"),
   post_code: z
     .string()
     .regex(/^\d{3}-\d{4}$/, "郵便番号は「123-4567」の形式で入力してください"),
@@ -45,9 +66,18 @@ const formSchema = z.object({
       /^(0[0-9]{1,4}-[0-9]{1,4}-[0-9]{4}|0[0-9]{9,10})$/,
       "電話番号は「0X-XXXX-XXXX」または「0XXXXXXXXX」の形式で入力してください"
     ),
-  email: z.string().nonempty("メールアドレスは必須です。"),
-  password: z.string().nonempty("パスワードは必須です。"),
-  facility_id:z.string(),
+  email: z
+    .string()
+    .email("メールアドレスの形式が正しくありません")
+    .min(1, "メールアドレスは必須です。"),
+  password: z
+    .string()
+    .regex(
+      /^(?=.*[a-zA-Z])(?=.*\d)[a-zA-Z\d]{8,}$/,
+      "パスワードは8文字以上で、英数字を含めてください"
+    )
+    .min(1, "パスワードは必須です。"),
+  facility_id: z.string().min(1, "施設IDは必須です。"),
 });
 
 export default function FacilityAdminAdd() {
@@ -69,7 +99,7 @@ export default function FacilityAdminAdd() {
       tell: "",
       email: "",
       password: "",
-      facility_id:"",
+      facility_id: "",
     },
   });
 
@@ -78,8 +108,6 @@ export default function FacilityAdminAdd() {
     setOpen(true);
     form.reset();
   };
-
-
 
   //   保存押下時の処理
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -94,9 +122,8 @@ export default function FacilityAdminAdd() {
       tell: values.tell,
       email: values.email,
       password: values.password,
-      facility_id: values.facility_id
+      facility_id: values.facility_id,
     });
-
 
     if (!res.status) {
       toast({
@@ -137,13 +164,17 @@ export default function FacilityAdminAdd() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
           <div className="flex mb-8">
-            <Button className="ml-auto" onClick={handleAdd}>新規追加</Button>
+            <Button className="ml-auto" onClick={handleAdd}>
+              新規追加
+            </Button>
           </div>
         </DialogTrigger>
         <DialogContent className="max-h-[90%] overflow-hidden">
           <DialogHeader>
             <DialogTitle>施設管理者の新規追加</DialogTitle>
-            <DialogDescription>施設管理者の新規追加を行います。</DialogDescription>
+            <DialogDescription>
+              施設管理者の新規追加を行います。
+            </DialogDescription>
           </DialogHeader>
 
           <div className="flex flex-col space-y-4 overflow-y-scroll">
@@ -231,7 +262,6 @@ export default function FacilityAdminAdd() {
                   )}
                 />
 
-
                 <FormField
                   control={form.control}
                   name="password"
@@ -295,25 +325,29 @@ export default function FacilityAdminAdd() {
                     <FormItem>
                       <FormLabel>施設</FormLabel>
                       <FormControl>
-                        <Select onValueChange={(value) => field.onChange(value)} value={field.value}>
+                        <Select
+                          onValueChange={(value) => field.onChange(value)}
+                          value={field.value}
+                        >
                           <SelectTrigger>
-                            <SelectValue/>
+                            <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
                             {facilities.map((facility) => (
-                              <SelectItem key={facility.id} value={facility.id.toString()}>
+                              <SelectItem
+                                key={facility.id}
+                                value={facility.id.toString()}
+                              >
                                 {facility.facility_name}
                               </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
-
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-
 
                 <Button type="submit">追加</Button>
               </form>
