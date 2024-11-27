@@ -38,6 +38,11 @@ export const columns: ColumnDef<FacilityAdmin>[] = [
     header: "住所",
   },
   {
+    accessorKey: "facility_name",
+    header: "施設",
+    cell: ({ row }) => row.original.facility_name || "未設定",
+  },
+  {
     id: "actions",
     header: "操作",
     cell: ({ row }) => (

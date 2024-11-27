@@ -1,10 +1,17 @@
 // DeleteForm.tsx
 
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { useFacilityAdminStore } from "./store"; 
+import { useFacilityAdminStore } from "./store";
 import { deleteFacilityAdminAction } from "./actions";
 
 interface DeleteFormProps {
@@ -19,13 +26,13 @@ export default function DeleteForm({ facility_admin_id }: DeleteFormProps) {
   // 削除処理
   const handleDelete = async () => {
     const res = await deleteFacilityAdminAction(facility_admin_id);
-    
+
     if (res.status) {
       toast({
         title: "削除成功",
         description: res.message,
       });
-      fetchFacilityAdmins(); // 施設リストを再取得して更新
+      fetchFacilityAdmins();
     } else {
       toast({
         title: "削除エラー",
@@ -33,8 +40,8 @@ export default function DeleteForm({ facility_admin_id }: DeleteFormProps) {
         variant: "destructive",
       });
     }
-    
-    setOpen(false); // ダイアログを閉じる
+
+    setOpen(false);
   };
 
   return (

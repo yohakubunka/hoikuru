@@ -1,4 +1,9 @@
-import { useReactTable, ColumnDef, flexRender,getCoreRowModel } from "@tanstack/react-table";
+import {
+  useReactTable,
+  ColumnDef,
+  flexRender,
+  getCoreRowModel,
+} from "@tanstack/react-table";
 
 interface DataTableProps<TData> {
   columns: ColumnDef<TData, any>[];
@@ -9,7 +14,7 @@ export function DataTable<TData>({ columns, data }: DataTableProps<TData>) {
   const table = useReactTable({
     data,
     columns,
-    getCoreRowModel: getCoreRowModel(), // ← プラグインを正しく設定
+    getCoreRowModel: getCoreRowModel(),
   });
 
   return (
@@ -22,7 +27,10 @@ export function DataTable<TData>({ columns, data }: DataTableProps<TData>) {
                 key={header.id}
                 className="border border-gray-300 px-4 py-2 text-left"
               >
-                {flexRender(header.column.columnDef.header, header.getContext())}
+                {flexRender(
+                  header.column.columnDef.header,
+                  header.getContext()
+                )}
               </th>
             ))}
           </tr>
@@ -32,10 +40,7 @@ export function DataTable<TData>({ columns, data }: DataTableProps<TData>) {
         {table.getRowModel().rows.map((row) => (
           <tr key={row.id}>
             {row.getVisibleCells().map((cell) => (
-              <td
-                key={cell.id}
-                className="border border-gray-300 px-4 py-2"
-              >
+              <td key={cell.id} className="border border-gray-300 px-4 py-2">
                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
               </td>
             ))}

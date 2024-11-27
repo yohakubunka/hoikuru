@@ -23,17 +23,39 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
-import { selectFacilityAdminsAction,selectFacilityAdminAction, updateFacilityAdminAction } from "./actions";
-import { useFacilityAdminStore } from "./store"; 
+import {
+  selectFacilityAdminsAction,
+  selectFacilityAdminAction,
+  updateFacilityAdminAction,
+} from "./actions";
+import { useFacilityAdminStore } from "./store";
 import { selectFacilitiesAction } from "../facilities/actions";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 
 // zodによるvalidation
 const formSchema = z.object({
-  first_name: z.string().nonempty("名前（性）は必須です。"),
-  last_name: z.string().nonempty("名前（名）は必須です"),
-  first_name_kana: z.string().nonempty("名前（せい）は必須です"),
-  last_name_kana: z.string().nonempty("名前（めい）は必須です"),
+  first_name: z.string().min(1, "名前（性）は必須です。"),
+  last_name: z.string().min(1, "名前（名）は必須です。"),
+  first_name_kana: z
+    .string()
+    .regex(
+      /^[\u3041-\u3096ー]+$/,
+      "名前（せい）は全角ひらがなで入力してください"
+    )
+    .min(1, "名前（せい）は必須です。"),
+  last_name_kana: z
+    .string()
+    .regex(
+      /^[\u3041-\u3096ー]+$/,
+      "名前（めい）は全角ひらがなで入力してください"
+    )
+    .min(1, "名前（めい）は必須です。"),
   post_code: z
     .string()
     .regex(/^\d{3}-\d{4}$/, "郵便番号は「123-4567」の形式で入力してください"),
@@ -44,7 +66,18 @@ const formSchema = z.object({
       /^(0[0-9]{1,4}-[0-9]{1,4}-[0-9]{4}|0[0-9]{9,10})$/,
       "電話番号は「0X-XXXX-XXXX」または「0XXXXXXXXX」の形式で入力してください"
     ),
-  facility_id:z.string(),
+  email: z
+    .string()
+    .email("メールアドレスの形式が正しくありません")
+    .min(1, "メールアドレスは必須です。"),
+  password: z
+    .string()
+    .regex(
+      /^(?=.*[a-zA-Z])(?=.*\d)[a-zA-Z\d]{8,}$/,
+      "パスワードは8文字以上で、英数字を含めてください"
+    )
+    .min(1, "パスワードは必須です。"),
+  facility_id: z.string().min(1, "施設IDは必須です。"),
 });
 
 export default function EditForm(facility_admin_id: number) {
@@ -62,7 +95,7 @@ export default function EditForm(facility_admin_id: number) {
       post_code: "",
       address: "",
       tell: "",
-      facility_id:"",
+      facility_id: "",
     },
   });
 
@@ -84,10 +117,10 @@ export default function EditForm(facility_admin_id: number) {
     );
   }
 
-// 保存押下時の処理
-async function onSubmit(values: z.infer<typeof formSchema>) {
-  await updateFacilityAdminAction({
-    id:facility_admin_id,
+  // 保存押下時の処理
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    await updateFacilityAdminAction({
+      id: facility_admin_id,
       first_name: values.first_name,
       last_name: values.last_name,
       first_name_kana: values.first_name_kana,
@@ -96,32 +129,30 @@ async function onSubmit(values: z.infer<typeof formSchema>) {
       address: values.address,
       tell: values.tell,
       facility_id: values.facility_id,
-  });
-  await fetchFacilityAdmins();
+    });
+    await fetchFacilityAdmins();
 
-  setOpen(false);
-}
+    setOpen(false);
+  }
 
-const [facilities, setFacilities] = useState([]);
+  const [facilities, setFacilities] = useState([]);
 
-// 施設データの取得
-useEffect(() => {
-  const fetchFacilities = async () => {
-    const data: any = await selectFacilitiesAction();
-    if (data) {
-      setFacilities(data);
-    } else {
-      toast({
-        title: "エラー",
-        description: "施設データの取得に失敗しました。",
-        variant: "destructive",
-      });
-    }
-  };
-  fetchFacilities();
-}, [toast]);
-
-
+  // 施設データの取得
+  useEffect(() => {
+    const fetchFacilities = async () => {
+      const data: any = await selectFacilitiesAction();
+      if (data) {
+        setFacilities(data);
+      } else {
+        toast({
+          title: "エラー",
+          description: "施設データの取得に失敗しました。",
+          variant: "destructive",
+        });
+      }
+    };
+    fetchFacilities();
+  }, [toast]);
 
   return (
     <>
@@ -129,13 +160,14 @@ useEffect(() => {
         <DialogTrigger asChild>
           <Button onClick={() => fecthFacility()}>編集</Button>
         </DialogTrigger>
-        <DialogContent>
+        <DialogContent className="">
           <DialogHeader>
             <DialogTitle>施設管理者の編集</DialogTitle>
             <DialogDescription>施設管理者の編集を行います。</DialogDescription>
           </DialogHeader>
 
-          <Form {...form}>
+          <div className="">
+            <Form {...form}>
               <form
                 onSubmit={form.handleSubmit(onSubmit)}
                 className="space-y-8"
@@ -248,27 +280,31 @@ useEffect(() => {
                   )}
                 />
 
-                
-<FormField
+                <FormField
                   control={form.control}
                   name="facility_id"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>施設</FormLabel>
                       <FormControl>
-                        <Select onValueChange={(value) => field.onChange(value)} value={field.value}>
+                        <Select
+                          onValueChange={(value) => field.onChange(value)}
+                          value={field.value}
+                        >
                           <SelectTrigger>
-                            <SelectValue/>
+                            <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
                             {facilities.map((facility) => (
-                              <SelectItem key={facility.id} value={facility.id.toString()}>
+                              <SelectItem
+                                key={facility.id}
+                                value={facility.id.toString()}
+                              >
                                 {facility.facility_name}
                               </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
-
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -278,6 +314,7 @@ useEffect(() => {
                 <Button type="submit">保存</Button>
               </form>
             </Form>
+          </div>
         </DialogContent>
       </Dialog>
     </>

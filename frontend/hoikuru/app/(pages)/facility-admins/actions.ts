@@ -121,7 +121,7 @@ const { data, error } = await supabase
         facility_id:facility_id,
     })
     .eq('id', id.facility_admin_id);
-    
+
 
     return { data, error };
 };
@@ -130,13 +130,23 @@ const { data, error } = await supabase
 export const selectFacilityAdminsAction = async () => {
     const supabase = await createSupabaseClient();
 
-    const { data, error } = await supabase.from('facility_admins').select('*').order('id', { ascending: true });
+    const { data, error } = await supabase
+        .from('facility_admins')
+        .select(`
+            *,
+            facilities (facility_name)
+        `)
+        .order('id', { ascending: true });
 
     if (error) {
+        console.error("Error fetching facility admins:", error);
         return false;
     }
 
-    return data;
+    return data.map((item) => ({
+        ...item,
+        facility_name: item.facilities?.facility_name || "未設定",
+    }));
 }
 
 // 施設情報の取得
@@ -160,7 +170,7 @@ export const deleteFacilityAdminAction = async (facility_admin_id: number) => {
         .from('facility_admins')
         .delete()
         .eq('id', facility_admin_id
-            
+
         ); // IDに一致する施設を削除
 
     if (error) {
