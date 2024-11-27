@@ -1,7 +1,7 @@
 "use server";
 import { createClient } from "@/utils/supabase/server";
 
-// ユーザー認証情報を取得する共通関数
+// 共通のユーザー認証情報取得関数
 const getAuthenticatedUser = async (supabase: ReturnType<typeof createClient>) => {
     const { data: userMeta, error } = await supabase.auth.getUser();
     if (error || !userMeta.user) {
@@ -11,183 +11,212 @@ const getAuthenticatedUser = async (supabase: ReturnType<typeof createClient>) =
 };
 
 
-// ユーザーのプロフィール情報（メールアドレスと電話番号）を更新するための非同期関数。
-export const updateProfileAction = async (
-    { email}: { email: string| null; }
+// updateTable関数|共通の更新関数
+// データベーステーブルを更新するための汎用関数。
+const updateTable = async (
+    // ReturnType は TypeScript のユーティリティ型で、ある関数型の「戻り値の型」を取得します。
+    // typeof は JavaScript および TypeScript の演算子で、変数や値の型を取得します。ただし、TypeScript では関数そのものの型を取得するためにも使用されます。
+    supabase: ReturnType<typeof createClient>,
+    tableName: string,
+    // Record<string, any> は TypeScript のユーティリティ型で、特定の形式のオブジェクト型を定義するために使われます。 
+    //Record<string, any> の場合：キーの型は string（文字列）。値の型は any（どんな型でもOK）。
+    updates: Record<string, any>,
+    userId: string
 ) => {
-    const supabase = await createClient();
-
-    // 認証情報が取得できなかった場合
-    const { user, error } = await getAuthenticatedUser(supabase);
-    if (error || !user) {
-        return { status: false, message: error };
+    const { error } = await supabase.from(tableName).update(updates).eq("user_id", userId);
+    if (error) {
+        console.error(`Error updating ${tableName}:`, error);
+        return { status: false, message: error.message };
     }
-   
-    const { error: profileError } = await supabase
-        .from('profiles')
-        .update({
-            email,
-        })
-        .eq('user_id', user.id);
+    return { status: true, message: `${tableName}を更新しました` };
+};
 
+// プロフィール情報を更新する関数
+export const updateProfileAction = async ({ email }: { email: string | null }) => {
+    const supabase = await createClient();
+    const { user, error } = await getAuthenticatedUser(supabase);
+    if (error || !user) return { status: false, message: error };
+
+    return await updateTable(supabase, "profiles", { email }, user.id);
+};
+
+// プロフィール情報を取得する関数
+export const selectProfileAction = async () => {
+    const supabase = await createClient();
+    const { user, error } = await getAuthenticatedUser(supabase);
+    if (error || !user) return { status: false, message: error };
+    // Supabase の profiles テーブルから現在のユーザーのプロフィールを取得。
+    //eq("user_id", user.id) で、user_id が現在のユーザーの ID と一致するデータを検索。
+    //.single() を使うことで、1件のみ取得することを明示。
+    const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select()
+        .eq("user_id", user.id)
+        .single();
+    // データ取得に失敗した場合、エラーメッセージをログに記録し、エラーを返します。
     if (profileError) {
-        console.error('Error updating profile:', profileError);
+        console.error("Error fetching profile:", profileError);
         return { status: false, message: profileError.message };
     }
 
-    return { status: true, message: 'プロフィールを更新しました' };
-};
-// ユーザーの施設管理者情報を更新するための非同期関数。
-export const updateFacilityAdmins = async (
-    { first_name, last_name, first_name_kana, last_name_kana, post_code, address, tell }: { first_name?: string| null; last_name?: string| null;  first_name_kana?: string| null; last_name_kana?: string| null; post_code?:number| null; address?:string| null; tell?:number| null}
-) => {
-    const supabase = await createClient();
-
-    // 認証情報が取得できなかった場合
-    const { user, error } = await getAuthenticatedUser(supabase);
-    if (error || !user) {
-        return { status: false, message: error };
-    }
-
-    const { error: facilityAdminsError } = await supabase
-        .from('facility_admins')
-        .update({
-           first_name,
-            last_name,
-            first_name_kana,
-            last_name_kana,
-            post_code,
-            address,
-            tell
-        })
-        .eq('user_id', user.id);
-
-    if (facilityAdminsError) {
-        console.error('Error updating profile:', facilityAdminsError);
-        return { status: false, message: facilityAdminsError.message };
-    }
-
-    return { status: true, message: 'プロフィールを更新しました' };
-};
-// ユーザープロフィールを取得する関数で、データが不足している場合には、自動的にメールアドレスや電話番号を更新します。
-export const selectProfileAction = async () => {
-    const supabase = await createClient();
-    const { data: userMeta, error: userError } = await supabase.auth.getUser();
-
-    // userError が true である、または userMeta.user が存在しない場合
-    if (userError || !userMeta.user) {
-        return { status: false, message: 'ユーザー情報の取得に失敗しました' };
-    }
-
-    const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select()
-        .eq('user_id', userMeta.user.id)
-        .single();
-
-    if (profileError) {
-        console.error('Error fetching profile', profileError);
-        return false;
-    }
-
-    let updated = false;
-
-    // メールが空の場合、ユーザーの認証情報からメールアドレスを取得してデータベースを更新。
-    if (profileData && !profileData.email) {
-        await supabase.from('profiles').update({
-            email: userMeta.user.email
-        }).eq('user_id', userMeta.user.id);
-        updated = true;
-    }
-    // 更新した場合は最新のデータを取得
-    if (updated) {
-        const { data } = await supabase
-            .from('profiles')
-            .select()
-            .eq('user_id', userMeta.user.id)
-            .single();
-        return data;
+    // 必要ならプロフィールデータを更新
+    const updates: Partial<typeof profileData> = {};
+    //profileData.email が空の場合、user.email を使用して補完データ (updates) に追加。
+    if (!profileData.email && user.email) updates.email = user.email;
+    // 更新するフィールドがあるかどうか
+    if (Object.keys(updates).length > 0) {
+        // updateTable は汎用の更新関数で、指定したテーブル（profiles）のデータを更新します。
+        //更新に失敗した場合は、エラーステータスを返して処理を終了。
+        const updateResult = await updateTable(supabase, "profiles", updates, user.id);
+        if (!updateResult.status) return updateResult;
+        return await supabase.from("profiles").select().eq("user_id", user.id).single();
     }
 
     return profileData;
 };
 
-// ユーザープロフィールを取得する関数で、データが不足している場合には、自動的にメールアドレスや電話番号を更新します。
+// 施設管理者情報を取得する関数
 export const selectFacilityAdmins = async () => {
     const supabase = await createClient();
-    const { data: userMeta, error: userError } = await supabase.auth.getUser();
-
-    // userError が true である、または userMeta.user が存在しない場合
-    if (userError || !userMeta.user) {
-        return { status: false, message: 'ユーザー情報の取得に失敗しました' };
-    }
+    const { user, error } = await getAuthenticatedUser(supabase);
+    if (error || !user) return { status: false, message: error };
 
     const { data: facilityAdminsData, error: facilityAdminsError } = await supabase
-        .from('facility_admins')
+        .from("facility_admins")
         .select()
-        .eq('user_id', userMeta.user.id)
+        .eq("user_id", user.id)
         .single();
 
     if (facilityAdminsError) {
-        console.error('Error fetching profile:aaaaaa', facilityAdminsError);
-        return false;
+        console.error("Error fetching facility admins:", facilityAdminsError);
+        return { status: false, message: facilityAdminsError.message };
     }
 
-    let updated = false;
+    // 必要なら施設管理者データを更新
+    const updates: Record<string, any> = {};
+    const fields = ["first_name", "last_name", "first_name_kana", "last_name_kana", "post_code", "address", "tell"];
+    fields.forEach((field) => {
+        if (!facilityAdminsData[field] && user[field]) {
+            updates[field] = user[field];
+        }
+    });
 
-    if (facilityAdminsData && !facilityAdminsData.first_name) {
-        await supabase.from('facility_admins').update({
-            first_name: userMeta.user.first_name
-        }).eq('user_id', userMeta.user.id);
-        updated = true;
-    }
+    if (Object.keys(updates).length > 0) {
+        const updateResult = await updateTable(supabase, "facility_admins", updates, user.id);
+        if (!updateResult.status) return updateResult;
 
-    if (facilityAdminsData && !facilityAdminsData.last_name && userMeta.user.last_name) {
-        await supabase.from('facility_admins').update({
-            last_name: userMeta.user.last_name
-        }).eq('user_id', userMeta.user.id);
-        updated = true;
-    }
-    if (facilityAdminsData && !facilityAdminsData.first_name_kana) {
-        await supabase.from('facility_admins').update({
-            first_name: userMeta.user.first_name_kana
-        }).eq('user_id', userMeta.user.id);
-        updated = true;
-    }
-
-    if (facilityAdminsData && !facilityAdminsData.last_name_kana && userMeta.user.last_name_kana) {
-        await supabase.from('facility_admins').update({
-            last_name_kana: userMeta.user.last_name_kana
-        }).eq('user_id', userMeta.user.id);
-        updated = true;
-    }
-    if (facilityAdminsData && !facilityAdminsData.post_code && userMeta.user.post_code) {
-        await supabase.from('facility_admins').update({
-            post_code: userMeta.user.post_code
-        }).eq('user_id', userMeta.user.id);
-        updated = true;
-    }
-    if (facilityAdminsData && !facilityAdminsData.address && userMeta.user.address) {
-        await supabase.from('facility_admins').update({
-            post_code: userMeta.user.post_code
-        }).eq('user_id', userMeta.user.id);
-        updated = true;
-    }
-    if (facilityAdminsData && !facilityAdminsData.tell && userMeta.user.tell) {
-        await supabase.from('facility_admins').update({
-            tel: userMeta.user.tel
-        }).eq('user_id', userMeta.user.id);
-        updated = true;
-    }
-    // 更新した場合は最新のデータを取得
-    if (updated) {
-        const { data } = await supabase
-            .from('facility_admins')
-            .select()
-            .eq('user_id', userMeta.user.id)
-            .single();
-        return data;
+        return await supabase.from("facility_admins").select().eq("user_id", user.id).single();
     }
 
     return facilityAdminsData;
+};
+
+// 施設管理者情報を更新する関数
+export const updateFacilityAdmins = async (updates: {
+    first_name?: string | null;
+    last_name?: string | null;
+    first_name_kana?: string | null;
+    last_name_kana?: string | null;
+    post_code?: number | null;
+    address?: string | null;
+    tell?: number | null;
+}) => {
+    const supabase = await createClient();
+    const { user, error } = await getAuthenticatedUser(supabase);
+    if (error || !user) return { status: false, message: error };
+
+    return await updateTable(supabase, "facility_admins", updates, user.id);
+};
+
+// 保護者情報を更新する関数
+export const updateFacilityMember = async (updates: {
+    first_name?: string | null;
+    last_name?: string | null;
+    first_name_kana?: string | null;
+    last_name_kana?: string | null;
+    post_code?: number | null;
+    address?: string | null;
+    tell?: number | null;
+}) => {
+    const supabase = await createClient();
+    const { user, error } = await getAuthenticatedUser(supabase);
+    if (error || !user) return { status: false, message: error };
+
+    return await updateTable(supabase, "facility_members", updates, user.id);
+};
+
+// 保護者アカウント情報を取得する関数
+export const selectFacilityMember = async () => {
+    const supabase = await createClient();
+    const { user, error } = await getAuthenticatedUser(supabase);
+    if (error || !user) return { status: false, message: error };
+
+    const { data: facilityMembersData, error: facilityMembersError } = await supabase
+        .from("facility_members")
+        .select()
+        .eq("user_id", user.id)
+        .single();
+
+    if (facilityMembersError) {
+        console.error("Error fetching facility_members:", facilityMembersError);
+        return { status: false, message: facilityMembersError.message };
+    }
+
+    // 保護者アカウントデータを更新
+    const updates: Record<string, any> = {};
+    const fields = ["first_name", "last_name", "first_name_kana", "last_name_kana", "post_code", "address", "tell"];
+    fields.forEach((field) => {
+        if (!facilityMembersData[field] && user[field]) {
+            updates[field] = user[field];
+        }
+    });
+
+    if (Object.keys(updates).length > 0) {
+        const updateResult = await updateTable(supabase, "facility_members", updates, user.id);
+        if (!updateResult.status) return updateResult;
+
+        return await supabase.from("facility_members").select().eq("user_id", user.id).single();
+    }
+
+    return facilityMembersData;
+};
+
+// 施設情報を更新する関数
+export const updateFacilities = async (updates: {
+    facility_name?: number | null;
+    post_code?: number | null;
+    address?: string | null;
+    tell?: number | null;
+}) => {
+    const supabase = await createClient();
+    const { user, error } = await getAuthenticatedUser(supabase);
+    if (error || !user) return { status: false, message: error };
+
+    return await updateTable(supabase, "facilities", updates, user.id);
+};
+
+// 施設情報を取得する関数
+
+
+export const selectFacilities = async () => {
+    const supabase = createClient(); // Initialize Supabase client
+    const { user, error } = await getAuthenticatedUser(supabase);
+
+    if (error || !user) {
+        return { status: false, message: error || "User not authenticated" };
+    }
+
+    // Fetch facilities for which the user is an admin
+    const { data: FacilitiesData, error: FacilitiesError } = await supabase
+    .from("facility_admins")
+    .select(`facility_id,
+        facilities(*)`) // リレーションを利用して関連データを取得
+    .eq("facility_id", user.id).single();;
+
+    if (FacilitiesError) {
+        console.error("Error fetching facilities:", FacilitiesError);
+        return { status: false, message: FacilitiesError.message };
+    }
+
+    return { status: true, data: FacilitiesData };
 };
