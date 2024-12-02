@@ -15,7 +15,8 @@ import {
     FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { selectProfileAction, updateProfileAction, selectFacilityMember, updateFacilityMember } from './actions'
+import { selectProfileAction, selectFacilityMember } from './selectActions'
+import { updateProfileAction, updateFacilityMember } from './updateActions'
 import { useToast } from "@/hooks/use-toast"
 import { data } from "autoprefixer"
 
