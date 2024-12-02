@@ -8,14 +8,14 @@ import { createClient as serviceCreateClient } from '@supabase/supabase-js';
 import { stat } from "fs";
 
 export const insertFacilityAction = async (
-    { facility_name, tel, post_code, address }: { facility_name: string, tel: string, post_code: string, address: string, }
+    { facility_name, tell, post_code, address }: { facility_name: string, tell: string, post_code: string, address: string, }
 ) => {
     const supabase = await createClient();
 
 
     const { data, error } = await supabase.from('facilities').insert({
         facility_name: facility_name,
-        tel: tel,
+        tell: tell,
         post_code: post_code,
         address: address,
     })
@@ -29,10 +29,9 @@ export const insertFacilityAction = async (
 }
 
 // 施設編集処理を追加
-export const updateFacilityAction = async ({id,facility_name,post_code,address,tel}:{id:number,facility_name:string,post_code:string,address:string,tel:string}
+export const updateFacilityAction = async ({id,facility_name,post_code,address,tell}:{id:any,facility_name:string,post_code:string,address:string,tell:string}
 ) => {
     const supabase = await createClient();
-
 
     const { data, error } = await supabase
         .from('facilities')
@@ -40,7 +39,7 @@ export const updateFacilityAction = async ({id,facility_name,post_code,address,t
             facility_name:facility_name,
             post_code:post_code,
             address:address,
-            tel:tel,
+            tell:tell,
         })
         .eq('id', id.facility_id); // 指定したIDの施設を更新
         console.log("data:",data);

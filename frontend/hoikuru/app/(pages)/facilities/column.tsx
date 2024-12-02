@@ -6,7 +6,7 @@ import DeleteForm from "./delete-form";
 export interface Facility {
   id: string;
   facility_name: string;
-  tel: string;
+  tell: string;
   post_code: string;
   address: string;
 }
@@ -18,7 +18,7 @@ export const columns: ColumnDef<Facility>[] = [
     header: "施設名",
   },
   {
-    accessorKey: "tel",
+    accessorKey: "tell",
     header: "電話番号",
   },
   {

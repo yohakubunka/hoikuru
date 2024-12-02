@@ -33,7 +33,7 @@ const formSchema = z.object({
     .string()
     .regex(/^\d{3}-\d{4}$/, "郵便番号は「123-4567」の形式で入力してください"),
   address: z.string().max(100, "住所は100文字以内で入力してください"),
-  tel: z
+  tell: z
     .string()
     .regex(
       /^(0[0-9]{1,4}-[0-9]{1,4}-[0-9]{4}|0[0-9]{9,10})$/,
@@ -52,7 +52,7 @@ export default function EditForm(facility_id: number) {
       facility_name: "",
       post_code: "",
       address: "",
-      tel: "",
+      tell: "",
     },
   });
 
@@ -65,7 +65,7 @@ export default function EditForm(facility_id: number) {
         form.setValue("facility_name", data.facility_name);
         form.setValue("post_code", data.post_code);
         form.setValue("address", data.address);
-        form.setValue("tel", data.tel);
+        form.setValue("tell", data.tell);
       },
       (data) => {}
     );
@@ -78,7 +78,7 @@ async function onSubmit(values: z.infer<typeof formSchema>) {
     facility_name: values.facility_name,
     post_code: values.post_code,
     address: values.address,
-    tel: values.tel,
+    tell: values.tell,
   });
   await fetchFacilities();
 
@@ -120,7 +120,7 @@ async function onSubmit(values: z.infer<typeof formSchema>) {
 
               <FormField
                 control={form.control}
-                name="tel"
+                name="tell"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>電話番号</FormLabel>

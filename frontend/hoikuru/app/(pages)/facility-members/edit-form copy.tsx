@@ -24,11 +24,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import {
-  selectFacilityAdminsAction,
-  selectFacilityAdminAction,
-  updateFacilityAdminAction,
+  selectFacilityMembersAction,
+  selectFacilityMemberAction,
+  updateFacilityMemberAction,
 } from "./actions";
-import { useFacilityAdminStore } from "./store";
+import { useFacilityMemberStore } from "./store";
 import { selectFacilitiesAction } from "../facilities/actions";
 import {
   Select,
@@ -66,12 +66,24 @@ const formSchema = z.object({
       /^(0[0-9]{1,4}-[0-9]{1,4}-[0-9]{4}|0[0-9]{9,10})$/,
       "電話番号は「0X-XXXX-XXXX」または「0XXXXXXXXX」の形式で入力してください"
     ),
+  email: z
+    .string()
+    .email("メールアドレスの形式が正しくありません")
+    .min(1, "メールアドレスは必須です。"),
+  password: z
+    .string()
+    .regex(
+      /^(?=.*[a-zA-Z])(?=.*\d)[a-zA-Z\d]{8,}$/,
+      "パスワードは8文字以上で、英数字を含めてください"
+    )
+    .min(1, "パスワードは必須です。"),
   facility_id: z.string().min(1, "施設IDは必須です。"),
 });
 
-export default function EditForm(facility_admin_id: number) {
+
+export default function EditForm(facility_member_id: number) {
   const [open, setOpen] = useState(false);
-  const { fetchFacilityAdmins } = useFacilityAdminStore();
+  const { fetchFacilityMembers } = useFacilityMemberStore();
 
   const { toast } = useToast();
   const form = useForm<z.infer<typeof formSchema>>({
@@ -89,8 +101,8 @@ export default function EditForm(facility_admin_id: number) {
   });
 
   //   施設情報の取得関数
-  async function fecthFacility() {
-    const res = selectFacilityAdminAction(facility_admin_id);
+  async function fecthFacilityMember() {
+    const res = selectFacilityMemberAction(facility_member_id);
     res.then(
       (data) => {
         form.setValue("first_name", data.first_name);
@@ -108,8 +120,8 @@ export default function EditForm(facility_admin_id: number) {
 
   // 保存押下時の処理
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    await updateFacilityAdminAction({
-      id: facility_admin_id,
+    await updateFacilityMemberAction({
+      id: facility_member_id,
       first_name: values.first_name,
       last_name: values.last_name,
       first_name_kana: values.first_name_kana,
@@ -119,8 +131,7 @@ export default function EditForm(facility_admin_id: number) {
       tell: values.tell,
       facility_id: values.facility_id,
     });
-    await fetchFacilityAdmins();
-
+    await fetchFacilityMembers();
     setOpen(false);
   }
 
@@ -143,32 +154,30 @@ export default function EditForm(facility_admin_id: number) {
     fetchFacilities();
   }, [toast]);
 
+
+
   return (
     <>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button onClick={() => fecthFacility()}>編集</Button>
+          <Button onClick={() => fecthFacilityMember()}>編集</Button>
         </DialogTrigger>
-        <DialogContent className="">
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle>施設管理者の編集</DialogTitle>
-            <DialogDescription>施設管理者の編集を行います。</DialogDescription>
+            <DialogTitle>施設の編集</DialogTitle>
+            <DialogDescription>施設の編集を行います。</DialogDescription>
           </DialogHeader>
 
-          <div className="">
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-8"
-              >
-                <div className="flex">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <div className="flex">
                   <div className="mr-2 w-full">
                     <FormField
                       control={form.control}
                       name="first_name"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>管理者名（性）</FormLabel>
+                          <FormLabel>メンバー名（性）</FormLabel>
                           <FormControl>
                             <Input placeholder="" {...field} type="text" />
                           </FormControl>
@@ -184,7 +193,7 @@ export default function EditForm(facility_admin_id: number) {
                       name="last_name"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>管理者名（名）</FormLabel>
+                          <FormLabel>メンバー名（名）</FormLabel>
                           <FormControl>
                             <Input placeholder="" {...field} type="text" />
                           </FormControl>
@@ -201,7 +210,7 @@ export default function EditForm(facility_admin_id: number) {
                       name="first_name_kana"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>管理者名（せい）</FormLabel>
+                          <FormLabel>メンバー名（せい）</FormLabel>
                           <FormControl>
                             <Input placeholder="" {...field} type="text" />
                           </FormControl>
@@ -216,7 +225,7 @@ export default function EditForm(facility_admin_id: number) {
                       name="last_name_kana"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>管理者名（めい）</FormLabel>
+                          <FormLabel>メンバー名（めい）</FormLabel>
                           <FormControl>
                             <Input placeholder="" {...field} type="text" />
                           </FormControl>
@@ -299,11 +308,9 @@ export default function EditForm(facility_admin_id: number) {
                     </FormItem>
                   )}
                 />
-
-                <Button type="submit">保存</Button>
-              </form>
-            </Form>
-          </div>
+              <Button type="submit">編集</Button>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
     </>

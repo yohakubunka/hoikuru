@@ -1,3 +1,6 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -6,9 +9,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import { useState, useEffect } from "react";
-
 import {
   Form,
   FormControl,
@@ -19,17 +23,12 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@/hooks/use-toast";
-import { useForm } from "react-hook-form";
 import {
-  selectFacilityAdminsAction,
-  selectFacilityAdminAction,
-  updateFacilityAdminAction,
+  insertFacilityMemberAction,
+  updateFacilityMemberAction,
 } from "./actions";
-import { useFacilityAdminStore } from "./store";
-import { selectFacilitiesAction } from "../facilities/actions";
+import { useFacilityMemberStore } from "./store";
 import {
   Select,
   SelectTrigger,
@@ -37,6 +36,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+import { selectFacilitiesAction } from "../facilities/actions";
 
 // zodによるvalidation
 const formSchema = z.object({
@@ -66,12 +66,25 @@ const formSchema = z.object({
       /^(0[0-9]{1,4}-[0-9]{1,4}-[0-9]{4}|0[0-9]{9,10})$/,
       "電話番号は「0X-XXXX-XXXX」または「0XXXXXXXXX」の形式で入力してください"
     ),
+  email: z
+    .string()
+    .email("メールアドレスの形式が正しくありません")
+    .min(1, "メールアドレスは必須です。"),
+  password: z
+    .string()
+    .regex(
+      /^(?=.*[a-zA-Z])(?=.*\d)[a-zA-Z\d]{8,}$/,
+      "パスワードは8文字以上で、英数字を含めてください"
+    )
+    .min(1, "パスワードは必須です。"),
   facility_id: z.string().min(1, "施設IDは必須です。"),
 });
 
-export default function EditForm(facility_admin_id: number) {
+export default function FacilityMemberAdd() {
+  // ダイアログの状態を保持するstate
   const [open, setOpen] = useState(false);
-  const { fetchFacilityAdmins } = useFacilityAdminStore();
+
+  const { fetchFacilityMembers } = useFacilityMemberStore();
 
   const { toast } = useToast();
   const form = useForm<z.infer<typeof formSchema>>({
@@ -84,32 +97,22 @@ export default function EditForm(facility_admin_id: number) {
       post_code: "",
       address: "",
       tell: "",
+      email: "",
+      password: "",
       facility_id: "",
     },
   });
 
-  //   施設情報の取得関数
-  async function fecthFacility() {
-    const res = selectFacilityAdminAction(facility_admin_id);
-    res.then(
-      (data) => {
-        form.setValue("first_name", data.first_name);
-        form.setValue("last_name", data.last_name);
-        form.setValue("first_name_kana", data.first_name_kana);
-        form.setValue("last_name_kana", data.last_name_kana);
-        form.setValue("post_code", data.post_code);
-        form.setValue("address", data.address);
-        form.setValue("tell", data.tell);
-        form.setValue("facility_id", data.facility_id);
-      },
-      (data) => {}
-    );
-  }
+  // 新規追加ボタンがクリックされたときのハンドラー
+  const handleAdd = () => {
+    setOpen(true);
+    form.reset();
+  };
 
-  // 保存押下時の処理
+  //   保存押下時の処理
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    await updateFacilityAdminAction({
-      id: facility_admin_id,
+    // 新規追加処理
+    const res: any = await insertFacilityMemberAction({
       first_name: values.first_name,
       last_name: values.last_name,
       first_name_kana: values.first_name_kana,
@@ -117,11 +120,24 @@ export default function EditForm(facility_admin_id: number) {
       post_code: values.post_code,
       address: values.address,
       tell: values.tell,
+      email: values.email,
+      password: values.password,
       facility_id: values.facility_id,
     });
-    await fetchFacilityAdmins();
 
-    setOpen(false);
+    if (!res.status) {
+      toast({
+        title: "エラー",
+        description: res.message || "予期しないエラーが発生しました", // エラーメッセージを表示
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "追加",
+      });
+      await fetchFacilityMembers();
+      setOpen(false);
+    }
   }
 
   const [facilities, setFacilities] = useState([]);
@@ -147,15 +163,21 @@ export default function EditForm(facility_admin_id: number) {
     <>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button onClick={() => fecthFacility()}>編集</Button>
+          <div className="flex mb-8">
+            <Button className="ml-auto" onClick={handleAdd}>
+              新規追加
+            </Button>
+          </div>
         </DialogTrigger>
-        <DialogContent className="">
+        <DialogContent className="max-h-[90%] overflow-hidden">
           <DialogHeader>
-            <DialogTitle>施設管理者の編集</DialogTitle>
-            <DialogDescription>施設管理者の編集を行います。</DialogDescription>
+            <DialogTitle>施設管理者の新規追加</DialogTitle>
+            <DialogDescription>
+              施設管理者の新規追加を行います。
+            </DialogDescription>
           </DialogHeader>
 
-          <div className="">
+          <div className="flex flex-col space-y-4 overflow-y-scroll">
             <Form {...form}>
               <form
                 onSubmit={form.handleSubmit(onSubmit)}
@@ -226,6 +248,33 @@ export default function EditForm(facility_admin_id: number) {
                     />
                   </div>
                 </div>
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>メールアドレス</FormLabel>
+                      <FormControl>
+                        <Input placeholder="" {...field} type="text" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>パスワード</FormLabel>
+                      <FormControl>
+                        <Input placeholder="" {...field} type="text" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
                 <FormField
                   control={form.control}
@@ -300,7 +349,7 @@ export default function EditForm(facility_admin_id: number) {
                   )}
                 />
 
-                <Button type="submit">保存</Button>
+                <Button type="submit">追加</Button>
               </form>
             </Form>
           </div>
