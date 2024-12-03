@@ -1,19 +1,6 @@
 "use server";
 import { createClient } from "@/utils/supabase/server";
 
-// users情報を取得する関数
-export const selectUsersAction = async () => {
-    const supabase = await createClient();
-    const { data: userMeta, error: userError } = await supabase.auth.getUser();
-
-    // userError が true である、または userMeta.user が存在しない場合
-    if (userError || !userMeta.user) {
-        return { status: false, message: 'ユーザー情報の取得に失敗しました' };
-    }
-    console.log(userMeta.user)
-
-}
-
 // プロフィール情報を取得する関数
 export const selectProfileAction = async () => {
     const supabase = await createClient();
@@ -221,55 +208,66 @@ export const selectFacilities = async () => {
 
     // userError が true である、または userMeta.user が存在しない場合
     if (userError || !userMeta.user) {
-        return { status: false, message: '施設情報の取得に失敗しました' };
+        return { status: false, message: 'ユーザー情報の取得に失敗しました' };
     }
-    const userFacilityId = userMeta.user.facility_id; // ユーザーの facility_id を取得
-    const { data: facilityData, error: facilityError } = await supabase
-        .from("facilities")
-        .select("*")
-        .eq("id", userFacilityId)
-        .single();
+    const userId = userMeta.user.id; // ユーザーの facility_id を取得
+    const { data: facilityAdminData, error: facilityAdminError } = await supabase
+    .from("facility_admins")
+    .select("*")
+    .eq("user_id", userId)
+    .single();
 
-    if (facilityError) {
-        console.error('Error fetching facilities:', facilityError);
-        return false;
-    }
-    let updated = false;
-
-    if (facilityData && !facilityData.facility_name) {
-        await supabase.from('facilities').update({
-            facility_name: userMeta.user.facility_name
-        }).eq("id", userFacilityId);
-        updated = true;
-    }
-    if (facilityData && !facilityData.post_code) {
-        await supabase.from('facilities').update({
-            post_code: userMeta.user.post_code
-        }).eq("id", userFacilityId);
-        updated = true;
-    }
-    if (facilityData && !facilityData.address) {
-        await supabase.from('facilities').update({
-            address: userMeta.user.address
-        }).eq("id", userFacilityId);
-        updated = true;
-    }
-    if (facilityData && !facilityData.tell) {
-        await supabase.from('facilities').update({
-            tell: userMeta.user.tell
-        }).eq("id", userFacilityId);
-        updated = true;
-    }
-    // 更新した場合は最新のデータを取得
-    if (updated) {
-        const { data } = await supabase
+    if ( facilityAdminData && facilityAdminData.length !== 0 ) {
+        const facilityId = facilityAdminData.facility_id; // ユーザーの facility_id を取得
+        const { data: facilityIdData, error: facilityIdError } = await supabase
             .from("facilities")
             .select("*")
-            .eq("id", userFacilityId)
+            .eq("id", facilityId)
             .single();
-        return data;
+            if (facilityIdError) {
+                console.error('Error fetching facilities:', facilityIdError);
+                return false;
+            }
+            let updated = false;
+        
+            if (facilityIdData && !facilityIdData.facility_name) {
+                await supabase.from('facilities').update({
+                    facility_name: userMeta.user.facility_name
+                }).eq("id", facilityIdData);
+                updated = true;
+            }
+            if (facilityIdData && !facilityIdData.post_code) {
+                await supabase.from('facilities').update({
+                    post_code: userMeta.user.post_code
+                }).eq("id", facilityIdData);
+                updated = true;
+            }
+            if (facilityIdData && !facilityIdData.address) {
+                await supabase.from('facilities').update({
+                    address: userMeta.user.address
+                }).eq("id", facilityIdData);
+                updated = true;
+            }
+            if (facilityIdData && !facilityIdData.tell) {
+                await supabase.from('facilities').update({
+                    tell: userMeta.user.tell
+                }).eq("id", facilityIdData);
+                updated = true;
+            }
+            // 更新した場合は最新のデータを取得
+            if (updated) {
+                const { data } = await supabase
+                    .from("facilities")
+                    .select("*")
+                    .eq("id", facilityIdData)
+                    .single();
+                return data;
+            }
+        
+            return facilityIdData;
     }
+    
 
-    return facilityData;
+
 };
 

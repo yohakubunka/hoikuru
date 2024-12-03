@@ -1,32 +1,6 @@
 "use server";
 import { createClient } from "@/utils/supabase/server";
 
-// users情報を更新する関数
-export const updateUserAction = async ({ email }: { email: string }) => {
-    const supabase = await createClient();
-
-    // 認証情報を取得
-    const { data: userMeta, error: userError } = await supabase.auth.getUser();
-    if (userError || !userMeta.user) {
-        return { status: false, message: 'ユーザー情報の取得に失敗しました', error: userError };
-    }
-
-    const userId = userMeta.user.id; // ユーザーIDを取得
-
-    // users テーブルの情報を更新
-    const { error: userUpdateError } = await supabase
-        .from('users')
-        .update({ email })
-        .eq('id', userId);
-
-    if (userUpdateError) {
-        console.error('Error updating user:', userUpdateError);
-        return { status: false, message: 'ユーザー情報の更新に失敗しました', error: userUpdateError };
-    }
-
-    return { status: true, message: 'ユーザー情報を更新しました' };
-};
-
 // プロフィール情報を更新する関数
 export const updateProfileAction = async (
     { email, }: { email: string; }
@@ -84,7 +58,6 @@ export const updateFacilityAdmins = async (
             tell
         })
         .eq('user_id', userMeta.user.id);
-
     if (facilityAdminsError) {
         console.error('Error updating facility_admins:', facilityAdminsError);
         return { status: false, message: facilityAdminsError.message };
@@ -142,23 +115,31 @@ export const updateFacilities = async (
     const supabase = await createClient();
     const { data: userMeta, error: userError } = await supabase.auth.getUser();
     if (userError || !userMeta.user) {
-        return { status: false, message: '施設情報の取得に失敗しました' };
+        return { status: false, message: 'ユーザー情報の取得に失敗しました' };
     }
-    const userFacilityId = userMeta.user.facility_id; // ユーザーの facility_id を取得
-    const { error: facilitiesError } = await supabase
-        .from('facilities')
-        .update({
-            facility_name,
-            post_code,
-            address,
-            tell
-        })
-        .eq("id", userFacilityId)
-        .single();
-    console.log(userFacilityId)
-    if (facilitiesError) {
-        console.error('Error updating facilities:', facilitiesError);
-        return { status: false, message: facilitiesError.message };
+    const userId = userMeta.user.id; // ユーザーの facility_id を取得
+    const { data: facilityAdminData, error: facilityAdminError } = await supabase
+        .from("facility_admins")
+        .select("*")
+        .eq("user_id", userId)
+        .single()
+
+    if (facilityAdminData && facilityAdminData.length !== 0) {
+        const facilityId = facilityAdminData.facility_id; // ユーザーの facility_id を取得
+        const { data: facilityIdData, error: facilityIdError } = await supabase
+            .from('facilities')
+            .update({
+                facility_name,
+                post_code,
+                address,
+                tell
+            })
+            .eq("id", facilityId)
+       
+        if (facilityIdError) {
+            console.error('Error updating facilities:', facilityIdError);
+            return { status: false, message: facilityIdError.message };
+        }
+        return { status: true, message: '施設情報を更新しました' };
     }
-    return { status: true, message: '施設情報を更新しました' };
 };

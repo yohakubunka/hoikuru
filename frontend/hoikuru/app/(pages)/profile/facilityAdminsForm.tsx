@@ -15,8 +15,8 @@ import {
     FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { selectUsersAction, selectFacilityAdmins } from './selectActions'
-import { updateUserAction, updateFacilityAdmins } from './updateActions'
+import { selectProfileAction, selectFacilityAdmins } from './selectActions'
+import { updateProfileAction, updateFacilityAdmins } from './updateActions'
 import { useToast } from "@/hooks/use-toast"
 import { data } from "autoprefixer"
 
@@ -57,7 +57,7 @@ export default function facilityAdminsForm() {
     //selectProfileAction関数を呼び出して、ユーザープロフィールデータを取得します。
     //データ取得後、form.setValueを使用してフォームの初期値をサーバーから取得した値で更新します。
     async function fetchUserProfile() {
-        const resProfile = selectUsersAction()
+        const resProfile = selectProfileAction()
         const resFacilityAdmin = selectFacilityAdmins()
         resProfile.then((data: any) => {
             form.setValue('email', data?.email)
@@ -87,7 +87,7 @@ export default function facilityAdminsForm() {
     //updateProfileAction関数でサーバーに更新リクエストを送信します。
     //成功・失敗に応じて、toast関数でユーザーに通知します。
     function onSubmit(values: z.infer<typeof formSchema>) {
-        const resProfile: any = updateUserAction({
+        const resProfile: any = updateProfileAction({
             email: values.email,
         })
         const resFacilityAdmin: any = updateFacilityAdmins({
