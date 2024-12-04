@@ -1,10 +1,10 @@
 "use client";
 
 import { useState,useEffect } from "react";
-import { useCategorieStore } from "./store";
+import { useCategoryStore } from "./store";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataTable } from "./data-table";
-import { columns, Categorie } from "./column"; // カラム定義をインポート
+import { columns, Category } from "./column"; // カラム定義をインポート
 import {
   Table,
   TableHeader,
@@ -14,19 +14,19 @@ import {
   TableCell,
 } from "@/components/ui/table";
 
-export default function CategoriesData() {
-  const { Categories, fetchCategories } = useCategorieStore();
+export default function CategorysData() {
+  const { Categorys, fetchCategorys } = useCategoryStore();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const loadCategories = async () => {
+    const loadCategorys = async () => {
       setIsLoading(true); // ローディング開始
-      await fetchCategories();
+      await fetchCategorys();
       setIsLoading(false); // ローディング終了
     };
 
-    if (Categories.length === 0) {
-      loadCategories();
+    if (Categorys.length === 0) {
+      loadCategorys();
     } else {
       setIsLoading(false); // 既にデータがある場合
     }
@@ -78,13 +78,13 @@ export default function CategoriesData() {
     );
   }
 
-  if (Categories.length === 0) {
+  if (Categorys.length === 0) {
     return <p className="text-center text-gray-500">データが存在しません</p>;
   }
 
   return (
     <div>
-      <DataTable<Categorie> columns={columns} data={Categories} />
+      <DataTable<Category> columns={columns} data={Categorys} />
     </div>
   );
 }

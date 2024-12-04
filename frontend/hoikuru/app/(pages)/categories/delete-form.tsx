@@ -11,8 +11,8 @@ import {
 } from "@/components/ui/dialog";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { useCategorieStore } from "./store";
-import { deleteCategorieAction } from "./actions";
+import { useCategoryStore } from "./store";
+import { deleteCategoryAction } from "./actions";
 
 interface DeleteFormProps {
   category_id: string;
@@ -20,19 +20,19 @@ interface DeleteFormProps {
 
 export default function DeleteForm({ category_id }: DeleteFormProps) {
   const [open, setOpen] = useState(false);
-  const { fetchCategories } = useCategorieStore();
+  const { fetchCategorys } = useCategoryStore();
   const { toast } = useToast();
 
   // 削除処理
   const handleDelete = async () => {
-    const res = await deleteCategorieAction(category_id);
+    const res = await deleteCategoryAction(category_id);
 
     if (res.status) {
       toast({
         title: "削除成功",
         description: res.message,
       });
-      fetchCategories();
+      fetchCategorys();
     } else {
       toast({
         title: "削除エラー",

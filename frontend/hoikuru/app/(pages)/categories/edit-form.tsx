@@ -24,11 +24,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import {
-  selectCategoriesAction,
+  selectCategorysAction,
   selectCategoryAction,
-  updateCategorieAction,
+  updateCategoryAction,
 } from "./actions";
-import { useCategorieStore } from "./store";
+import { useCategoryStore } from "./store";
 import { selectFacilitiesAction } from "../facilities/actions";
 import {
   Select,
@@ -46,7 +46,7 @@ const formSchema = z.object({
 
 export default function EditForm(category_id: any) {
   const [open, setOpen] = useState(false);
-  const { fetchCategories } = useCategorieStore();
+  const { fetchCategorys } = useCategoryStore();
 
   const { toast } = useToast();
   const form = useForm<z.infer<typeof formSchema>>({
@@ -57,7 +57,7 @@ export default function EditForm(category_id: any) {
   });
 
   //   施設情報の取得関数
-  async function fecthCategorie() {
+  async function fecthCategory() {
     const res = selectCategoryAction(category_id);
     res.then(
       (data) => {
@@ -69,11 +69,11 @@ export default function EditForm(category_id: any) {
 
   // 保存押下時の処理
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    await updateCategorieAction({
+    await updateCategoryAction({
       id: category_id,
       name: values.name,
     });
-    await fetchCategories();
+    await fetchCategorys();
     setOpen(false);
   }
 
@@ -102,7 +102,7 @@ export default function EditForm(category_id: any) {
     <>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button onClick={() => fecthCategorie()}>編集</Button>
+          <Button onClick={() => fecthCategory()}>編集</Button>
         </DialogTrigger>
         <DialogContent>
           <DialogHeader>

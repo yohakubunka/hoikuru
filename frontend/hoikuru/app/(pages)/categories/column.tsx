@@ -3,12 +3,12 @@ import EditForm from "./edit-form";
 import DeleteForm from "./delete-form";
 
 // Facility の型を定義
-export interface Categorie {
+export interface Category {
   name: string;
 }
 
 // カラム定義を作成
-export const columns: ColumnDef<Categorie>[] = [
+export const columns: ColumnDef<Category>[] = [
   {
     accessorKey: "name",
     header: "カテゴリー名",
