@@ -4,6 +4,7 @@ import DeleteForm from "./delete-form";
 
 // Facility の型を定義
 export interface Category {
+  id: string;
   name: string;
 }
 

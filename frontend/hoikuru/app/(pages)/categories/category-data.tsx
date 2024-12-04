@@ -84,7 +84,7 @@ export default function CategorysData() {
 
   return (
     <div>
-      <DataTable<Category> columns={columns} data={Categorys} />
+      <DataTable<Category,unknown> columns={columns} data={Categorys} />
     </div>
   );
 }
