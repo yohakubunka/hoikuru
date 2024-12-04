@@ -23,8 +23,12 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
-import { selectFacilitiesAction,selectFacilityAction, updateFacilityAction } from "./actions";
-import { useFacilityStore } from "./store"; 
+import {
+  selectFacilitiesAction,
+  selectFacilityAction,
+  updateFacilityAction,
+} from "./actions";
+import { useFacilityStore } from "./store";
 
 // zodによるvalidation
 const formSchema = z.object({
@@ -41,7 +45,7 @@ const formSchema = z.object({
     ),
 });
 
-export default function EditForm(facility_id: number) {
+export default function EditForm(facility_id: any) {
   const [open, setOpen] = useState(false);
   const { fetchFacilities } = useFacilityStore();
 
@@ -71,21 +75,19 @@ export default function EditForm(facility_id: number) {
     );
   }
 
-// 保存押下時の処理
-async function onSubmit(values: z.infer<typeof formSchema>) {
-  await updateFacilityAction({
-    id: facility_id,
-    facility_name: values.facility_name,
-    post_code: values.post_code,
-    address: values.address,
-    tell: values.tell,
-  });
-  await fetchFacilities();
+  // 保存押下時の処理
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    await updateFacilityAction({
+      id: facility_id,
+      facility_name: values.facility_name,
+      post_code: values.post_code,
+      address: values.address,
+      tell: values.tell,
+    });
+    await fetchFacilities();
 
-  setOpen(false);
-}
-
-
+    setOpen(false);
+  }
 
   return (
     <>
