@@ -1,13 +1,13 @@
-import CategoriesAdd from "./category-add";
-import CategorieData from "./category-data";
+import CategorysAdd from "./category-add";
+import CategoryData from "./category-data";
 
-export default function Categories () {
+export default function Categorys () {
     return (
         <>
                  <div className="">
         <div className="m-8 w-full">
-          <CategoriesAdd />
-          <CategorieData />
+          <CategorysAdd />
+          <CategoryData />
         </div>
       </div>
         </>
