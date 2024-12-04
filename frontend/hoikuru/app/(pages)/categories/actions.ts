@@ -2,7 +2,7 @@
 
 import { createClient  } from "@/utils/supabase/server";
 
-export const insertCategorieAction = async (
+export const insertCategoryAction = async (
     { name }: { name: string }
 ) => {
     const supabase = await createClient();
@@ -61,7 +61,7 @@ export const insertCategorieAction = async (
 }
 
 // 施設編集処理を追加
-export const updateCategorieAction = async ({id,name}:{id:any,name:string}
+export const updateCategoryAction = async ({id,name}:{id:any,name:string}
 ) => {
 const supabase = await createClient();
 const { data, error } = await supabase
@@ -77,7 +77,7 @@ const { data, error } = await supabase
 };
 
 // 施設情報の取得
-export const selectCategoriesAction = async () => {
+export const selectCategorysAction = async () => {
     const supabase = await createClient();
 
         // ログイン中のユーザー情報を取得
@@ -149,7 +149,7 @@ export const selectCategoryAction = async ({ category_id }: { category_id: strin
 }
 
 // 施設削除
-export const deleteCategorieAction = async (category_id: string) => {
+export const deleteCategoryAction = async (category_id: string) => {
     const supabase = await createClient();
 
     const { data, error } = await supabase

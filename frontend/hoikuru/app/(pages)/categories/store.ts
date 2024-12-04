@@ -1,28 +1,28 @@
 import {create} from 'zustand';
-import { selectCategoriesAction } from './actions';
+import { selectCategorysAction } from './actions';
 
-interface CategorieStore {
-  Categories: Array<any>;
-  setCategories: (Categories: Array<any>) => void;
-  fetchCategories: () => Promise<void>;
+interface CategoryStore {
+  Categorys: Array<any>;
+  setCategorys: (Categorys: Array<any>) => void;
+  fetchCategorys: () => Promise<void>;
 }
 
-export const useCategorieStore = create<CategorieStore>((set: any) => ({
-  Categories: [],
+export const useCategoryStore = create<CategoryStore>((set: any) => ({
+  Categorys: [],
   message: '', // メッセージの初期状態
-  setCategories: (Categories: any) => {
-    if (Categories.length === 0) {
-      set({ Categories, message: 'データが存在しません。' });
+  setCategorys: (Categorys: any) => {
+    if (Categorys.length === 0) {
+      set({ Categorys, message: 'データが存在しません。' });
     } else {
-      set({ Categories, message: '' });
+      set({ Categorys, message: '' });
     }
   },
-  fetchCategories: async () => {
-    const Categories:any = await selectCategoriesAction();
-    if (Categories && Categories.length > 0) {
-      set({ Categories, message: '' });
+  fetchCategorys: async () => {
+    const Categorys:any = await selectCategorysAction();
+    if (Categorys && Categorys.length > 0) {
+      set({ Categorys, message: '' });
     } else {
-      set({ Categories: [], message: 'データが存在しません。' });
+      set({ Categorys: [], message: 'データが存在しません。' });
     }
   },
 }));

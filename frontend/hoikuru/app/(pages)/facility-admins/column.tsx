@@ -12,6 +12,7 @@ export interface FacilityAdmin {
   tel: string;
   post_code: string;
   address: string;
+  facility_name:string;
 }
 
 // カラム定義を作成

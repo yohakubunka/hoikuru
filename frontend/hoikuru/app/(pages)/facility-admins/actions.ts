@@ -6,10 +6,16 @@ import { createClient as createSupabaseClient } from "@/utils/supabase/server";
 export const insertFacilityAdminAction = async (
     { first_name, last_name, first_name_kana, last_name_kana, tell, post_code, address, email, password,facility_id }: { first_name: string, last_name: string, first_name_kana: string, last_name_kana: string, tell: string, post_code: string, address: string, email: string, password: string,facility_id:string }
 ) => {
+
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        return { status: false, message: "Supabase 環境変数が設定されていません" };
+    }
+    
     const supabaseAdmin = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL,
         process.env.SUPABASE_SERVICE_ROLE_KEY
     );
+    
     const supabase = await createSupabaseClient();
 
 
@@ -104,7 +110,7 @@ export const insertFacilityAdminAction = async (
 }
 
 // 施設編集処理を追加
-export const updateFacilityAdminAction = async ({ id, first_name, last_name, first_name_kana, last_name_kana, post_code, address, tell,facility_id }: { id: number, first_name: string, last_name: string, first_name_kana: string, last_name_kana: string, post_code: string, address: string, tell: string ,facility_id:string}
+export const updateFacilityAdminAction = async ({ id, first_name, last_name, first_name_kana, last_name_kana, post_code, address, tell,facility_id }: { id: any, first_name: string, last_name: string, first_name_kana: string, last_name_kana: string, post_code: string, address: string, tell: string ,facility_id:string}
 ) => {
     const supabase = await createSupabaseClient();
 

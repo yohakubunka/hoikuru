@@ -69,7 +69,7 @@ const formSchema = z.object({
   facility_id: z.string().min(1, "施設IDは必須です。"),
 });
 
-export default function EditForm(facility_admin_id: number) {
+export default function EditForm(facility_admin_id: any) {
   const [open, setOpen] = useState(false);
   const { fetchFacilityAdmins } = useFacilityAdminStore();
 
@@ -142,6 +142,11 @@ export default function EditForm(facility_admin_id: number) {
     };
     fetchFacilities();
   }, [toast]);
+
+  interface Facility {
+    id:string;
+    facility_name:string;
+  }
 
   return (
     <>
@@ -284,7 +289,7 @@ export default function EditForm(facility_admin_id: number) {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {facilities.map((facility) => (
+                            {facilities.map((facility:Facility) => (
                               <SelectItem
                                 key={facility.id}
                                 value={facility.id.toString()}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState,useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useTagStore } from "./store";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataTable } from "./data-table";
@@ -84,7 +84,7 @@ export default function TagsData() {
 
   return (
     <div>
-      <DataTable<Tag> columns={columns} data={Tags} />
+      <DataTable<Tag, unknown> columns={columns} data={Tags} />
     </div>
   );
 }

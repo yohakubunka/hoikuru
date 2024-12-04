@@ -127,7 +127,7 @@ export default function FacilityAdminsData() {
 
   return (
     <div className="">
-      <DataTable<FacilityAdmin> columns={columns} data={FacilitiyAdmins} />
+      <DataTable<FacilityAdmin,unknown> columns={columns} data={FacilitiyAdmins} />
     </div>
   );
 }

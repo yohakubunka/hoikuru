@@ -25,10 +25,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import {
-  insertCategorieAction,
-  updateCategorieAction,
+  insertCategoryAction,
+  updateCategoryAction,
 } from "./actions";
-import { useCategorieStore } from "./store";
+import { useCategoryStore } from "./store";
 import {
   Select,
   SelectTrigger,
@@ -43,11 +43,11 @@ const formSchema = z.object({
   name: z.string().min(1, "カテゴリー名は必須です。"),
 });
 
-export default function CategorieAdd() {
+export default function CategoryAdd() {
   // ダイアログの状態を保持するstate
   const [open, setOpen] = useState(false);
 
-  const { fetchCategories } = useCategorieStore();
+  const { fetchCategorys } = useCategoryStore();
 
   const { toast } = useToast();
   const form = useForm<z.infer<typeof formSchema>>({
@@ -66,7 +66,7 @@ export default function CategorieAdd() {
   //   保存押下時の処理
   async function onSubmit(values: z.infer<typeof formSchema>) {
     // 新規追加処理
-    const res: any = await insertCategorieAction({
+    const res: any = await insertCategoryAction({
       name: values.name,
     });
 
@@ -80,7 +80,7 @@ export default function CategorieAdd() {
       toast({
         title: "追加",
       });
-      await fetchCategories();
+      await fetchCategorys();
       setOpen(false);
     }
   }
