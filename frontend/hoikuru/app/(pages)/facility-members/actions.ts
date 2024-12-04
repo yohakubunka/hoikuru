@@ -6,6 +6,10 @@ import { createClient as createSupabaseClient } from "@/utils/supabase/server";
 export const insertFacilityMemberAction = async (
     { first_name, last_name, first_name_kana, last_name_kana, tell, post_code, address, email, password,facility_id }: { first_name: string, last_name: string, first_name_kana: string, last_name_kana: string, tell: string, post_code: string, address: string, email: string, password: string,facility_id:string }
 ) => {
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        return { status: false, message: "Supabase 環境変数が設定されていません" };
+    }
+    
     const supabaseMember = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL,
         process.env.SUPABASE_SERVICE_ROLE_KEY

@@ -159,6 +159,12 @@ export default function FacilityMemberAdd() {
     fetchFacilities();
   }, [toast]);
 
+  interface Facility {
+    id:string;
+    facility_name:string;
+  }
+
+
   return (
     <>
       <Dialog open={open} onOpenChange={setOpen}>
@@ -333,7 +339,7 @@ export default function FacilityMemberAdd() {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {facilities.map((facility) => (
+                            {facilities.map((facility:Facility) => (
                               <SelectItem
                                 key={facility.id}
                                 value={facility.id.toString()}
