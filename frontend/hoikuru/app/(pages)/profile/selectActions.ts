@@ -40,7 +40,6 @@ export const selectProfileAction = async () => {
             .single();
         return data;
     }
-
     return profileData;
 };
 
