@@ -3,27 +3,47 @@
 import { createClient  } from "@/utils/supabase/server";
 
 export const insertNoticeAction = async (
-    { first_name, last_name, first_name_kana, last_name_kana, tell, post_code, address, email, password,facility_id }: { first_name: string, last_name: string, first_name_kana: string, last_name_kana: string, tell: string, post_code: string, address: string, email: string, password: string,facility_id:string }
+    { title, content, thumbnail_url, publish }: { title: string, content: string, thumbnail_url: string, publish: boolean,  }
 ) => {
 
     const supabase = await createClient();
+   const { data, error: userError } = await supabase.auth.getUser();
 
+   if (userError) {
+       console.error("ユーザー情報の取得に失敗。:", userError?.message);
+       return { status: false, message: userError.message };
+   }
+   const user = data.user;
 
-
-    const { data: admin_data, error: admin_error } = await supabase.from('notice').insert({
-        title: first_name,
-        contnt: last_name,
-        thumbnail_url: first_name_kana,
+   if (!user || !user.id) {
+       console.error("User ID is undefined");
+       return { status: false, message: "ユーザーIDが不明です。" };
+   }
+    
+    
+    const { data: notice_data, error: notice_error } = await supabase.from('notices').insert({
+        title: title,
+        content: content,
+        thumbnail_url: thumbnail_url,
         publish: publish,
-    })
+        create_user_id: user?.id, // ログインユーザーのIDを設定
+        update_user_id: user?.id, // ログインユーザーのIDを設定
+    }).select();
 
 
-    if (admin_error) {
-        console.error('Error updating exam collection:', admin_error);
-        return { status: false, message: admin_error.message };
-    }
 
-    return { status: true, message: '施設管理者が追加されました。' };
+    if (notice_error) {
+        console.error("Error inserting notice:", notice_error);
+        return { status: false, message: notice_error.message };
+      }
+    
+      if (notice_data && notice_data.length > 0) {
+        const newNoticeId = notice_data[0].id; // 挿入されたレコードのIDを取得
+        return { status: true, id: newNoticeId, message: "投稿が追加されました。" };
+      }
+    
+      return { status: false, message: "投稿の挿入に失敗しました。" };
+
 }
 
 // 施設編集処理を追加
@@ -32,7 +52,7 @@ export const updateNoticeAction = async ({ id, first_name, last_name, first_name
     const supabase = await createClient();
 
 const { data, error } = await supabase
-    .from('notice')
+    .from('notices')
     .update({
         first_name: first_name,
         last_name: last_name,
@@ -54,7 +74,7 @@ export const selectNoticesAction = async () => {
     const supabase = await createClient();
 
     const { data, error } = await supabase
-        .from('notice')
+        .from('notices')
         .select(`
             *,
             facilities (facility_name)
@@ -76,7 +96,7 @@ export const selectNoticesAction = async () => {
 export const selectNoticeAction = async ({ facility_admin_id }: { facility_admin_id: number }) => {
     const supabase = await createClient();
 
-    const { data, error } = await supabase.from('notice').select().eq('id', facility_admin_id).single();
+    const { data, error } = await supabase.from('notices').select().eq('id', facility_admin_id).single();
 
     if (error) {
         return false;
@@ -90,7 +110,7 @@ export const deleteNoticeAction = async (facility_admin_id: number) => {
     const supabase = await createClient();
 
     const { data, error } = await supabase
-        .from('notice')
+        .from('notices')
         .delete()
         .eq('id', facility_admin_id
 

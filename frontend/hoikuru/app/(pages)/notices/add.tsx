@@ -1,14 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -95,21 +88,6 @@ export default function NoticeAdd() {
 
   return (
     <>
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger asChild>
-          <div className="flex mb-8">
-            <Button className="ml-auto" onClick={handleAdd}>
-              新規追加
-            </Button>
-          </div>
-        </DialogTrigger>
-        <DialogContent className="max-h-[90%] overflow-hidden">
-          <DialogHeader>
-            <DialogTitle>投稿の新規追加</DialogTitle>
-            <DialogDescription>投稿の新規追加を行います。</DialogDescription>
-          </DialogHeader>
-
-          <div className="flex flex-col space-y-4 overflow-y-scroll">
             <Form {...form}>
               <form className="space-y-8">
                 <FormField
@@ -125,7 +103,7 @@ export default function NoticeAdd() {
                     </FormItem>
                   )}
                 />
-
+                <SummernoteEditor/>
                 <FormField
                   control={form.control}
                   name="content"
@@ -173,9 +151,7 @@ export default function NoticeAdd() {
                 <Button type="submit">追加</Button>
               </form>
             </Form>
-          </div>
-        </DialogContent>
-      </Dialog>
+  
     </>
   );
 }

@@ -8,6 +8,12 @@ import { ThemeProvider } from "next-themes";
 import Link from "next/link";
 import { Toaster } from "@/components/ui/toaster"
 import "./globals.css";
+import 'jquery';
+import 'bootstrap/dist/css/bootstrap.css';
+import 'summernote/dist/summernote-bs4.css';
+import 'bootstrap/dist/js/bootstrap.bundle';
+import 'summernote/dist/summernote-bs4.js';
+
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
