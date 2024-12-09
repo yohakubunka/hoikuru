@@ -160,8 +160,8 @@ export default function FacilityMemberAdd() {
   }, [toast]);
 
   interface Facility {
-    id:string;
-    facility_name:string;
+    id: string;
+    facility_name: string;
   }
 
 
@@ -339,7 +339,7 @@ export default function FacilityMemberAdd() {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {facilities.map((facility:Facility) => (
+                            {facilities.map((facility: Facility) => (
                               <SelectItem
                                 key={facility.id}
                                 value={facility.id.toString()}
