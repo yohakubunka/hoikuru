@@ -24,5 +24,5 @@ export default function UppyComponent({ onUploadComplete }: { onUploadComplete: 
     }
   });
 
-  return <Dashboard uppy={uppy} />;
+  return <Dashboard uppy={uppy} height={200} />;
 }

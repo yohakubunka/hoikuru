@@ -57,6 +57,7 @@ export const updateNoticeAction = async ({ id, title, content, thumbnail_url, pu
             title: title,
             publish: publish,
             content: content,
+            thumbnail_url: thumbnail_url,
         })
         .eq('id', id);
 
