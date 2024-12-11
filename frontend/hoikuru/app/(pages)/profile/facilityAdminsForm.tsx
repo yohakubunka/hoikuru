@@ -14,6 +14,7 @@ import {
     FormLabel,
     FormMessage,
 } from "@/components/ui/form"
+
 import { Input } from "@/components/ui/input"
 import { selectProfileAction, selectFacilityAdmins ,updateProfileAction, updateFacilityAdmins } from './Actions'
 import { useToast } from "@/hooks/use-toast"
@@ -27,9 +28,9 @@ const formSchema = z.object({
     first_name_kana: z.string().optional().nullable(),
     last_name_kana: z.string().optional().nullable(),
     tell: z.string()
-        .regex(/^(0\d{1,4})-?(\d{1,4})-?(\d{4})$/, { message: "数字、ハイフンのみ入力可能です" })
+        .regex(/^0[-\d]{11,12}$/, { message: "数字、ハイフンのみ入力可能です " })
         .optional().nullable(),
-    post_code: z.string().optional().nullable(),
+    post_code: z.string().regex(/^[0-9]{3}-[0-9]{4}$/, { message: "数字、ハイフンのみ入力可能です " }).optional().nullable(),
     address: z.string().optional().nullable(),
 })
 
@@ -217,6 +218,7 @@ export default function facilityAdminsForm() {
                                 )}
                             />
                         </div>
+    
                         <FormField
                             control={form.control}
                             name="tell"
@@ -224,7 +226,8 @@ export default function facilityAdminsForm() {
                                 <FormItem>
                                     <FormLabel>電話番号</FormLabel>
                                     <FormDescription>
-                                        電話番号を編集します
+                                        電話番号を編集します。ハイフンを含めて入力してください。
+                                        <br/>例：03-1234-5678
                                     </FormDescription>
                                     <FormControl>
                                         <Input placeholder="090-1234-5678" {...field} type="text" />
@@ -239,6 +242,10 @@ export default function facilityAdminsForm() {
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>郵便番号</FormLabel>
+                                    <FormDescription>
+                                       郵便番号を編集します。ハイフンを含めて入力してください。
+                                        <br/>例：123-4567
+                                    </FormDescription>
                                     <FormControl>
                                         <Input placeholder="" {...field} type="text" />
                                     </FormControl>
@@ -252,6 +259,9 @@ export default function facilityAdminsForm() {
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>住所</FormLabel>
+                                    <FormDescription>
+                                       住所を編集します。
+                                    </FormDescription>
                                     <FormControl>
                                         <Input placeholder="" {...field} type="text" />
                                     </FormControl>

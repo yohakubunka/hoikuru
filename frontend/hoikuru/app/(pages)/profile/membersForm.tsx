@@ -27,9 +27,9 @@ const formSchema = z.object({
     first_name_kana: z.string().optional().nullable(),
     last_name_kana: z.string().optional().nullable(),
     tell: z.string()
-        .regex(/^(0\d{1,4})-?(\d{1,4})-?(\d{4})$/, { message: "数字、ハイフンのみ入力可能です" })
+        .regex(/^0[-\d]{11,12}$/, { message: "数字、ハイフンのみ入力可能です " })
         .optional().nullable(),
-    post_code: z.string().optional().nullable(),
+    post_code: z.string().regex(/^[0-9]{3}-[0-9]{4}$/, { message: "数字、ハイフンのみ入力可能です" }).optional().nullable(),
     address: z.string().optional().nullable(),
 })
 
