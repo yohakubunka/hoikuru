@@ -3,13 +3,19 @@ import XHRUpload from "@uppy/xhr-upload";
 import { Dashboard } from "@uppy/react";
 import "@uppy/core/dist/style.css";
 import "@uppy/dashboard/dist/style.css";
+import Japanese from "@uppy/locales/lib/ja_JP";
 
-export default function UppyComponent({ onUploadComplete }: { onUploadComplete: (url: string) => void }) {
+export default function UppyComponent({
+  onUploadComplete,
+}: {
+  onUploadComplete: (url: string) => void;
+}) {
   const uppy = new Uppy({
     restrictions: {
       maxNumberOfFiles: 1,
       allowedFileTypes: ["image/*"],
     },
+    locale: Japanese,
   });
 
   uppy.use(XHRUpload, {

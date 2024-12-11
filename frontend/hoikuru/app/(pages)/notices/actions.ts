@@ -47,7 +47,7 @@ export const insertNoticeAction = async (
 }
 
 // 施設編集処理を追加
-export const updateNoticeAction = async ({ id, title, content, thumbnail_url, publish }: { id: any, title: string, content: string, thumbnail_url: string, publish: boolean, }
+export const updateNoticeAction = async ({ id, title, content, thumbnail_url, publish,category_id }: { id: any, title: string, content: string, thumbnail_url: string, publish: boolean,category_id:string }
 ) => {
     const supabase = await createClient();
 

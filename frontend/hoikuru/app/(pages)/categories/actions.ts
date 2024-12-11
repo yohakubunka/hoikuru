@@ -77,7 +77,7 @@ const { data, error } = await supabase
 };
 
 // 施設情報の取得
-export const selectCategorysAction = async () => {
+export const selectCategoriesAction = async () => {
     const supabase = await createClient();
 
         // ログイン中のユーザー情報を取得
@@ -89,25 +89,25 @@ export const selectCategorysAction = async () => {
             return { status: false, message: userError.message };
         }
         const user = data.user;
-    
+
         if (!user || !user.id) {
             console.error("User ID is undefined");
             return { status: false, message: "ユーザーIDが不明です。" };
         }
-    
+
         // ログイン中のユーザーの profiles テーブルの role を確認
         const { data: login_data, error: login_error } = await supabase
             .from('profiles')
             .select('role')
             .eq('user_id', user.id)
             .single(); // 一つだけ取得する
-    
-    
+
+
         if (login_error) {
             console.error('Error fetching login data:', login_error.message);
             return { status: false, message: "ログインに失敗しました。" };
         }
-    
+
         if (login_data?.role !== 2) {
             console.error('User does not have the required role.');
             return { status: false, message: "このアカウントには追加権限がありません。" };
@@ -124,7 +124,7 @@ export const selectCategorysAction = async () => {
             .select('*')
             .eq('facility_id', facility_admin_data?.facility_id)
             .order('id', { ascending: true });
-          
+
           if (categories_error) {
             console.error('Error fetching categories:', categories_error);
           } else {
@@ -137,13 +137,13 @@ export const selectCategorysAction = async () => {
 // 施設情報の取得
 export const selectCategoryAction = async ({ category_id }: { category_id: string }) => {
     const supabase = await createClient();
-    
+
     const { data, error } = await supabase.from('categories').select().eq('id', category_id).single();
-    
+
     if (error) {
         return false;
     }
-    
+
 
     return data;
 }
