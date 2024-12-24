@@ -6,7 +6,9 @@ import { hasEnvVars } from "@/utils/supabase/check-env-vars";
 import { GeistSans } from "geist/font/sans";
 import { ThemeProvider } from "next-themes";
 import Link from "next/link";
-import { Toaster } from "@/components/ui/toaster"
+import { Toaster } from "@/components/ui/toaster";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
+import { AppSidebar } from "@/components/app-sidebar";
 import "./globals.css";
 
 const defaultUrl = process.env.VERCEL_URL
@@ -25,7 +27,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={GeistSans.className} suppressHydrationWarning>
+    <html lang="ja" className={GeistSans.className} suppressHydrationWarning>
       <body className="bg-background text-foreground">
         <ThemeProvider
           attribute="class"
@@ -33,20 +35,22 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+              <SidebarProvider>
+              <AppSidebar />
           <main className="min-h-screen flex flex-col items-center">
             <div className="flex-1 w-full flex flex-col gap-20 items-center">
               <nav className="w-full flex justify-center border-b border-b-foreground/10 h-16">
                 <div className="w-full max-w-5xl flex justify-between items-center p-3 px-5 text-sm">
                   <div className="flex gap-5 items-center font-semibold">
                     <Link href={"/"}>Next.js Supabase Starter</Link>
-                    <div className="flex items-center gap-2">
-                      <DeployButton />
-                    </div>
                   </div>
                   {!hasEnvVars ? <EnvVarWarning /> : <HeaderAuth />}
                 </div>
               </nav>
+
+
               <div className="flex flex-col gap-20 max-w-5xl p-5">
+              <SidebarTrigger />
                 {children}
               </div>
 
@@ -66,6 +70,7 @@ export default function RootLayout({
               </footer>
             </div>
           </main>
+          </SidebarProvider>
           <Toaster />
         </ThemeProvider>
       </body>

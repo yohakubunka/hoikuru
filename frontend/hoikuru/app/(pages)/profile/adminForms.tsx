@@ -15,8 +15,7 @@ import {
     FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { updateUserAction } from './updateActions'
-import { selectUsersAction } from './selectActions'
+import { updateProfileAction ,selectProfileAction } from './Actions'
 import { useToast } from "@/hooks/use-toast"
 import { data } from "autoprefixer"
 
@@ -41,7 +40,7 @@ export default function adminForms() {
     //selectProfileAction関数を呼び出して、ユーザープロフィールデータを取得します。
     //データ取得後、form.setValueを使用してフォームの初期値をサーバーから取得した値で更新します。
     async function fetchUserProfile() {
-        const res = selectUsersAction()
+        const res = selectProfileAction()
         res.then((data: any) => {
             form.setValue('email', data?.email)
         }, (data: any) => {
