@@ -31,14 +31,16 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { selectNoticeAction, updateNoticeAction } from "./actions";
+import { selectNoticeAction, updateNoticeAction, fetchCategoriesByNoticeId, fetchTagsByNoticeId } from "./actions";
 import { Switch } from "./switch";
-
+import React, { useRef } from "react";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
 import Uppy from "@/components/uppy";
 import { useSearchParams } from "next/navigation";
 import { selectCategoriesAction } from "../categories/actions";
+import { selectTagsAction } from "../tags/actions";
+import { log } from "node:console";
 
 // zodによるvalidation
 const formSchema = z.object({
@@ -46,12 +48,14 @@ const formSchema = z.object({
   content: z.string(),
   thumbnail_url: z.string(),
   publish: z.boolean(),
-  category_id: z.string(),
+  category_id: z.array(z.string()).optional(), // 必須でない配列
+  tag_id: z.array(z.string()).optional(), // 必須でない配列
 });
 
 export default function NoticeAdd() {
   const [quillValue, setQuillValue] = useState("");
   const [open, setOpen] = useState(false);
+
 
   const { toast } = useToast();
 
@@ -67,7 +71,8 @@ export default function NoticeAdd() {
       content: "",
       thumbnail_url: "",
       publish: false,
-      category_id: "",
+      category_id: [],
+      tag_id: [],
     },
   });
 
@@ -122,11 +127,50 @@ export default function NoticeAdd() {
     } else {
       toast({
         title: "エラー",
-        description: "施設データの取得に失敗しました。",
+        description: "カテゴリーデータの取得に失敗しました。",
         variant: "destructive",
       });
     }
   };
+
+  // タグ情報格納state
+  const [tags, setTags] = useState([]);
+  // タグの取得
+  const fetchTags = async () => {
+    const data: any = await selectTagsAction();
+    if (data) {
+      setTags(data);
+    } else {
+      toast({
+        title: "エラー",
+        description: "タグデータの取得に失敗しました。",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const [defaultCategories, setDefaultCategories] = useState<string[]>([]);
+  const fetchSetCategories = async () => {
+    if (notice_id) {
+      fetchCategoriesByNoticeId(notice_id).then((data) => {
+        setDefaultCategories(data);
+        form.setValue("category_id", data); // 初期値をフォームに設定
+      });
+    }
+  };
+
+  const [defaultTags, setDefaultTags] = useState<string[]>([]);
+  const fetchSetTags = async () => {
+    if (notice_id) {
+      fetchTagsByNoticeId(notice_id).then((data) => {
+        setDefaultTags(data);
+        form.setValue("tag_id", data); // 初期値をフォームに設定
+      });
+    }
+  };
+
+
+
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     const res: any = await updateNoticeAction({
@@ -135,8 +179,10 @@ export default function NoticeAdd() {
       content: quillValue,
       publish: values.publish,
       thumbnail_url: values.thumbnail_url,
-      category_id: values.category_id,
+      category_id: values.category_id ? values.category_id : [],
+      tag_id: values.tag_id ? values.tag_id : [],
     });
+
 
     if (res?.status === false) {
       toast({
@@ -160,7 +206,12 @@ export default function NoticeAdd() {
   useEffect(() => {
     fetchNotice();
     fetchCategories();
+    fetchSetCategories();
+    fetchTags();
+    fetchSetTags();
   }, []);
+
+
 
   return (
     <div className="bg-white">
@@ -194,6 +245,7 @@ export default function NoticeAdd() {
                 onChange={setQuillValue}
                 modules={modules}
                 style={{ height: "300px" }}
+
               />
             </div>
           </div>
@@ -227,95 +279,145 @@ export default function NoticeAdd() {
                 control={form.control}
                 name="category_id"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>カテゴリー</FormLabel>
+                  <FormItem className="border  rounded-md">
+                    <div className="flex space-x-4">
+                      <FormLabel className="bg-gray-100 text-gray-800 p-4 rounded-t-md cursor-pointer transition-colors hover:bg-gray-200 w-full">カテゴリー</FormLabel>
+                    </div>
                     <FormControl>
-                      <Select
-                        onValueChange={(value) => field.onChange(value)}
-                        value={field.value}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {categories.map((category: Category) => (
-                            <SelectItem
-                              key={category.id}
+                      <div className="checkbox-group">
+                        {categories.map((category: Category) => (
+                          <div key={category.id} className="checkbox-item flex items-center gap-2 border-b last:border-0 p-4">
+                            <input
+                              type="checkbox"
+                              id={`category-${category.id}`}
                               value={category.id.toString()}
-                            >
-                              {category.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                              checked={(field.value || []).includes(category.id.toString())}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                const newValue = e.target.checked
+                                  ? [...(field.value || []), value]
+                                  : (field.value || []).filter((id) => id !== value);
+                                field.onChange(newValue);
+                              }}
+                              className="form-checkbox h-5 w-5 text-blue-600"
+                            />
+                            <label htmlFor={`category-${category.id}`}>{category.name}</label>
+                          </div>
+                        ))}
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-
-              <Dialog open={open} onOpenChange={setOpen}>
-                <DialogTrigger asChild>
-                  <Button
-                    className="ml-auto flex mt-2"
-                    onClick={handleAdd}
-                    type="button"
-                  >
-                    サムネイル画像設定
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-h-[90%] overflow-hidden">
-                  <DialogHeader>
-                    <DialogTitle>サムネイル画像のアップロード</DialogTitle>
-                  </DialogHeader>
-
-                  <div className="">
-                    <Uppy
-                      onUploadComplete={(url) => {
-                        form.setValue("thumbnail_url", url);
-                        setOpen(false);
-                        toast({
-                          title: "アップロード成功",
-                          description: "画像が正常にアップロードされました。",
-                        });
-                      }}
-                    />
-                  </div>
-                </DialogContent>
-              </Dialog>
 
               <FormField
                 control={form.control}
-                name="thumbnail_url"
+                name="tag_id"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="border rounded-md mt-3">
+                    <div className="flex">
+                      <FormLabel className="bg-gray-100 text-gray-800 p-4 rounded-t-md cursor-pointer transition-colors hover:bg-gray-200 w-full">タグ</FormLabel>
+                    </div>
                     <FormControl>
-                      <>
-                        <Input {...field} type="hidden" />
-                        {field.value && (
-                          <div className="mt-4">
-                            <img
-                              src={field.value}
-                              alt="サムネイル"
-                              className="w-full h-auto"
+                      <div className="checkbox-group">
+                        {tags.map((tag: Category) => (
+                          <div key={tag.id} className="checkbox-item flex items-center gap-2 border-b last:border-0 p-4">
+                            <input
+                              type="checkbox"
+                              id={`tag-${tag.id}`}
+                              value={tag.id.toString()}
+                              checked={(field.value || []).includes(tag.id.toString())}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                const newValue = e.target.checked
+                                  ? [...(field.value || []), value]
+                                  : (field.value || []).filter((id) => id !== value);
+                                field.onChange(newValue);
+                              }}
+                              className="form-checkbox h-5 w-5 text-blue-600"
                             />
-                            {/* 削除ボタン */}
-                            <Button
-                              type="button"
-                              variant="destructive"
-                              onClick={() => form.setValue("thumbnail_url", "")}
-                              className="mt-2 flex ml-auto"
-                            >
-                              サムネイル削除
-                            </Button>
+                            <label htmlFor={`tag-${tag.id}`}>{tag.name}</label>
                           </div>
-                        )}
-                      </>
+                        ))}
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+
+
+              <div className="border mt-3 rounded-md">
+                <p className="bg-gray-100 text-gray-800 p-4 rounded-t-md  transition-colors  w-full">
+                  サムネイル
+                </p>
+                <div className="p-4">
+
+                  <Dialog open={open} onOpenChange={setOpen}>
+                    <DialogTrigger asChild>
+                      <Button
+                        className="ml-auto flex mt-2"
+                        onClick={handleAdd}
+                        type="button"
+                      >
+                        サムネイル画像設定
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-h-[90%] overflow-hidden">
+                      <DialogHeader>
+                        <DialogTitle>サムネイル画像のアップロード</DialogTitle>
+                      </DialogHeader>
+
+                      <div className="">
+                        <Uppy
+                          onUploadComplete={(url) => {
+                            form.setValue("thumbnail_url", url);
+                            setOpen(false);
+                            toast({
+                              title: "アップロード成功",
+                              description: "画像が正常にアップロードされました。",
+                            });
+                          }}
+                        />
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+
+                  <FormField
+                    control={form.control}
+                    name="thumbnail_url"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <div>
+                            <Input {...field} type="hidden" />
+                            {field.value && (
+                              <div className="mt-4">
+                                <img
+                                  src={field.value}
+                                  alt="サムネイル"
+                                  className="w-full h-auto"
+                                />
+                                <Button
+                                  type="button"
+                                  variant="destructive"
+                                  onClick={() => form.setValue("thumbnail_url", "")}
+                                  className="mt-2 flex ml-auto"
+                                >
+                                  サムネイル削除
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
             </div>
           </div>
         </form>

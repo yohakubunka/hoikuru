@@ -3,12 +3,13 @@ import AddForm from "./add";
 import { Button } from "@/components/ui/button";
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import {insertNoticeAction} from "./actions";
+import { insertNoticeAction } from "./actions";
+import NoticesData from "./data";
 
 export default function Notices() {
 
-    const router = useRouter();
-    const handleInsertNotice = async () => {
+  const router = useRouter();
+  const handleInsertNotice = async () => {
     const response = await insertNoticeAction({
       title: "新しい投稿",
       content: "",
@@ -27,8 +28,8 @@ export default function Notices() {
   return (
     <>
       <div className="m-8 w-full">
-        <Button onClick={handleInsertNotice}>投稿を作成する</Button>
-        {/* 一覧表示 */}
+        <Button className="flex mb-8 ml-auto" onClick={handleInsertNotice}>投稿を作成する</Button>
+        <NoticesData />
       </div>
     </>
   );

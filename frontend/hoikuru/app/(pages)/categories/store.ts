@@ -1,5 +1,5 @@
-import {create} from 'zustand';
-import { selectCategorysAction } from './actions';
+import { create } from 'zustand';
+import { selectNoticesAction } from './actions';
 
 interface CategoryStore {
   Categorys: Array<any>;
@@ -18,7 +18,7 @@ export const useCategoryStore = create<CategoryStore>((set: any) => ({
     }
   },
   fetchCategorys: async () => {
-    const Categorys:any = await selectCategorysAction();
+    const Categorys: any = await selectNoticesAction();
     if (Categorys && Categorys.length > 0) {
       set({ Categorys, message: '' });
     } else {
