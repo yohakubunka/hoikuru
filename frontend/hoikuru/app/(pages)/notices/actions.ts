@@ -246,3 +246,26 @@ export const fetchTagsByNoticeId = async (noticeId: string) => {
     // 配列に変換
     return data.map((record) => record.tag_id);
 };
+
+export const uploadImageToSupabase = async (file:any) => {
+
+const supabase = await createClient();
+
+const fileName = `${Date.now()}-${file.name}`;
+
+// Promiseを返却
+return supabase.storage
+  .from("notice_thumbnails") // ストレージバケット名
+  .upload(fileName, file, {
+    cacheControl: "3600",
+    upsert: false,
+  })
+  .then(({ data, error }) => {
+    if (error) {
+      throw new Error(error.message); // エラーの場合は例外をスロー
+    }
+
+    // URLを生成して返却
+    return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/notice_thumbnails/${fileName}`;
+  });
+  }

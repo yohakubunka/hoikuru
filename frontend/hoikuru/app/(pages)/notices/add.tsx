@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -31,7 +31,13 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { selectNoticeAction, updateNoticeAction, fetchCategoriesByNoticeId, fetchTagsByNoticeId } from "./actions";
+import {
+  selectNoticeAction,
+  updateNoticeAction,
+  fetchCategoriesByNoticeId,
+  fetchTagsByNoticeId,
+  uploadImageToSupabase,
+} from "./actions";
 import { Switch } from "./switch";
 import React, { useRef } from "react";
 import ReactQuill from "react-quill-new";
@@ -56,7 +62,6 @@ export default function NoticeAdd() {
   const [quillValue, setQuillValue] = useState("");
   const [open, setOpen] = useState(false);
 
-
   const { toast } = useToast();
 
   interface Category {
@@ -76,22 +81,70 @@ export default function NoticeAdd() {
     },
   });
 
-  const modules = {
-    toolbar: {
-      container: [
-        ["bold", "italic", "underline", "strike"],
-        ["blockquote", "code-block"],
-        ["link", "image"],
-        [{ header: 1 }, { header: 2 }],
-        [{ list: "ordered" }, { list: "bullet" }, { list: "check" }],
-        [{ size: ["small", false, "large", "huge"] }],
-        [{ header: [1, 2, 3, 4, 5, 6, false] }],
-        [{ color: [] }, { background: [] }],
-        [{ font: [] }],
-        [{ align: [] }],
-      ],
-    },
+  const quillRef = useRef<ReactQuill | null>(null);
+
+  const imageHandler = async () => {
+    const input = document.createElement("input");
+    input.setAttribute("type", "file");
+    input.setAttribute("accept", "image/*");
+    input.click();
+
+    input.onchange = async () => {
+      if (input.files && input.files[0]) {
+        const file = input.files[0];
+        try {
+          // Supabaseに画像をアップロード
+          const url = await uploadImageToSupabase(file);
+          if (url) {
+            const quill = quillRef.current?.getEditor();
+            if (quill) {
+              const range = quill.getSelection();
+              if (range) {
+                quill.insertEmbed(range.index, "image", url);
+              }
+            }
+            toast({
+              title: "アップロード成功",
+              description: "画像が正常にアップロードされました。",
+            });
+          } else {
+            throw new Error("URLが取得できませんでした。");
+          }
+        } catch (error) {
+          toast({
+            title: "エラー",
+            description: "画像のアップロードに失敗しました。",
+            variant: "destructive",
+          });
+          console.error("画像アップロードエラー:", error);
+        }
+      }
+    };
   };
+
+  // Quillのモジュール設定をuseMemoでメモ化
+  const modules = useMemo(
+    () => ({
+      toolbar: {
+        container: [
+          ["bold", "italic", "underline", "strike"],
+          ["blockquote", "code-block"],
+          ["link", "image"],
+          [{ header: 1 }, { header: 2 }],
+          [{ list: "ordered" }, { list: "bullet" }, { list: "check" }],
+          [{ size: ["small", false, "large", "huge"] }],
+          [{ header: [1, 2, 3, 4, 5, 6, false] }],
+          [{ color: [] }, { background: [] }],
+          [{ font: [] }],
+          [{ align: [] }],
+        ],
+        handlers: {
+          image: imageHandler, // 画像挿入ボタンにカスタムハンドラーを設定
+        },
+      },
+    }),
+    []
+  ); // 初期レンダリング時に一度だけメモ化
 
   const searchParams = useSearchParams();
   const notice_id: string | null = searchParams.get("id");
@@ -169,9 +222,6 @@ export default function NoticeAdd() {
     }
   };
 
-
-
-
   async function onSubmit(values: z.infer<typeof formSchema>) {
     const res: any = await updateNoticeAction({
       id: notice_id,
@@ -182,7 +232,6 @@ export default function NoticeAdd() {
       category_id: values.category_id ? values.category_id : [],
       tag_id: values.tag_id ? values.tag_id : [],
     });
-
 
     if (res?.status === false) {
       toast({
@@ -210,8 +259,6 @@ export default function NoticeAdd() {
     fetchTags();
     fetchSetTags();
   }, []);
-
-
 
   return (
     <div className="bg-white">
@@ -245,7 +292,7 @@ export default function NoticeAdd() {
                 onChange={setQuillValue}
                 modules={modules}
                 style={{ height: "300px" }}
-
+                ref={quillRef} // Quillインスタンスを保持
               />
             </div>
           </div>
@@ -281,27 +328,38 @@ export default function NoticeAdd() {
                 render={({ field }) => (
                   <FormItem className="border  rounded-md">
                     <div className="flex space-x-4">
-                      <FormLabel className="bg-gray-100 text-gray-800 p-4 rounded-t-md cursor-pointer transition-colors hover:bg-gray-200 w-full">カテゴリー</FormLabel>
+                      <FormLabel className="bg-gray-100 text-gray-800 p-4 rounded-t-md cursor-pointer transition-colors hover:bg-gray-200 w-full">
+                        カテゴリー
+                      </FormLabel>
                     </div>
                     <FormControl>
                       <div className="checkbox-group">
                         {categories.map((category: Category) => (
-                          <div key={category.id} className="checkbox-item flex items-center gap-2 border-b last:border-0 p-4">
+                          <div
+                            key={category.id}
+                            className="checkbox-item flex items-center gap-2 border-b last:border-0 p-4"
+                          >
                             <input
                               type="checkbox"
                               id={`category-${category.id}`}
                               value={category.id.toString()}
-                              checked={(field.value || []).includes(category.id.toString())}
+                              checked={(field.value || []).includes(
+                                category.id.toString()
+                              )}
                               onChange={(e) => {
                                 const value = e.target.value;
                                 const newValue = e.target.checked
                                   ? [...(field.value || []), value]
-                                  : (field.value || []).filter((id) => id !== value);
+                                  : (field.value || []).filter(
+                                      (id) => id !== value
+                                    );
                                 field.onChange(newValue);
                               }}
                               className="form-checkbox h-5 w-5 text-blue-600"
                             />
-                            <label htmlFor={`category-${category.id}`}>{category.name}</label>
+                            <label htmlFor={`category-${category.id}`}>
+                              {category.name}
+                            </label>
                           </div>
                         ))}
                       </div>
@@ -317,22 +375,31 @@ export default function NoticeAdd() {
                 render={({ field }) => (
                   <FormItem className="border rounded-md mt-3">
                     <div className="flex">
-                      <FormLabel className="bg-gray-100 text-gray-800 p-4 rounded-t-md cursor-pointer transition-colors hover:bg-gray-200 w-full">タグ</FormLabel>
+                      <FormLabel className="bg-gray-100 text-gray-800 p-4 rounded-t-md cursor-pointer transition-colors hover:bg-gray-200 w-full">
+                        タグ
+                      </FormLabel>
                     </div>
                     <FormControl>
                       <div className="checkbox-group">
                         {tags.map((tag: Category) => (
-                          <div key={tag.id} className="checkbox-item flex items-center gap-2 border-b last:border-0 p-4">
+                          <div
+                            key={tag.id}
+                            className="checkbox-item flex items-center gap-2 border-b last:border-0 p-4"
+                          >
                             <input
                               type="checkbox"
                               id={`tag-${tag.id}`}
                               value={tag.id.toString()}
-                              checked={(field.value || []).includes(tag.id.toString())}
+                              checked={(field.value || []).includes(
+                                tag.id.toString()
+                              )}
                               onChange={(e) => {
                                 const value = e.target.value;
                                 const newValue = e.target.checked
                                   ? [...(field.value || []), value]
-                                  : (field.value || []).filter((id) => id !== value);
+                                  : (field.value || []).filter(
+                                      (id) => id !== value
+                                    );
                                 field.onChange(newValue);
                               }}
                               className="form-checkbox h-5 w-5 text-blue-600"
@@ -347,13 +414,11 @@ export default function NoticeAdd() {
                 )}
               />
 
-
               <div className="border mt-3 rounded-md">
                 <p className="bg-gray-100 text-gray-800 p-4 rounded-t-md  transition-colors  w-full">
                   サムネイル
                 </p>
                 <div className="p-4">
-
                   <Dialog open={open} onOpenChange={setOpen}>
                     <DialogTrigger asChild>
                       <Button
@@ -376,7 +441,8 @@ export default function NoticeAdd() {
                             setOpen(false);
                             toast({
                               title: "アップロード成功",
-                              description: "画像が正常にアップロードされました。",
+                              description:
+                                "画像が正常にアップロードされました。",
                             });
                           }}
                         />
@@ -402,7 +468,9 @@ export default function NoticeAdd() {
                                 <Button
                                   type="button"
                                   variant="destructive"
-                                  onClick={() => form.setValue("thumbnail_url", "")}
+                                  onClick={() =>
+                                    form.setValue("thumbnail_url", "")
+                                  }
                                   className="mt-2 flex ml-auto"
                                 >
                                   サムネイル削除
@@ -417,7 +485,6 @@ export default function NoticeAdd() {
                   />
                 </div>
               </div>
-
             </div>
           </div>
         </form>
