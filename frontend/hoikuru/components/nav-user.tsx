@@ -1,6 +1,14 @@
 "use client"
-// アイコンコンポーネント
+import Link from "next/link";
+// ログアウトアクション
+import { signOutAction } from "@/app/actions";
 import { createClient } from "@/utils/supabase/server";
+// 非同期によるユーザ認証取得
+// ページを開いたらuseEffectでユーザー情報を取得
+// usestateで変数に
+import { useState, useEffect } from "react";
+
+// アイコンコンポーネント
 import {
   ChevronsUpDown,
   LogOut,
@@ -31,7 +39,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-
+// const user = getUserAction
 export function NavUser({
   user,
 }: {
@@ -41,6 +49,27 @@ export function NavUser({
     avatar: string
   }
 }) {
+  // const [userMail, setUserMail] = useState("")
+
+  // useEffect(() => {
+  //   const supabase = createClient();
+  //   async function fetchUser() {
+  //     const {
+  //       data: { user },
+  //       error,
+  //     } = await supabase.auth.getUser();
+
+  //     if (user) {
+  //       setUserMail({
+  //         email: user.email,
+  //       });
+  //     } else if (error) {
+  //       console.error("Error fetching user:", error.message);
+  //     }
+  //   }
+  //   setUserMail("userMail")
+  // }, []);
+
   const { isMobile } = useSidebar()
   return (
     <SidebarMenu>
@@ -83,16 +112,18 @@ export function NavUser({
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem>
-                <a href="profile">プロフィール</a>
+                <Link href="./profile">プロフィール</Link>
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <a href="change-password">パスワード変更</a>
+                <Link href="./change-password">パスワード変更</Link>
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
               <LogOut />
-              ログアウト
+              <form action={signOutAction}>
+                <button type="submit">ログアウト</button>
+              </form>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

@@ -10,6 +10,17 @@ import { Toaster } from "@/components/ui/toaster";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar";
 import "./globals.css";
+import { Separator } from "@/components/ui/separator"
+
+// shud cn　パンくずリスト
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -20,9 +31,6 @@ export const metadata = {
   title: "ホイクル",
   description: "制作中",
 };
-
-const SIDEBAR_WIDTH = "16rem"
-const SIDEBAR_WIDTH_MOBILE = "18rem"
 
 export default async function RootLayout({
   children,
@@ -45,10 +53,27 @@ export default async function RootLayout({
             <AppSidebar />
             <main className="min-h-screen w-full flex flex-col items-center">
               <div className="flex-1 w-full flex flex-col gap-20 items-center relative">
-                <div className="absolute top-2 left-2"><SidebarTrigger /></div>
                 <nav className="w-full flex justify-center border-b border-b-foreground/10 h-16">
-                  <div className="w-full max-w-5xl flex justify-between items-center p-3 px-5 text-sm">
-                    {!hasEnvVars ? <EnvVarWarning /> : <HeaderAuth />}
+
+                  <div className="w-full flex justify-between items-center p-3 px-5 text-sm">
+                    <div className="flex items-center">
+                      <SidebarTrigger />
+                      <Separator orientation="vertical" className="mr-2 h-4" />
+                      <Breadcrumb>
+                        <BreadcrumbList>
+                          <BreadcrumbItem className="hidden md:block">
+                            <BreadcrumbLink href="#">
+                              Building Your Application
+                            </BreadcrumbLink>
+                          </BreadcrumbItem>
+                          <BreadcrumbSeparator className="hidden md:block" />
+                          <BreadcrumbItem>
+                            <BreadcrumbPage>Data Fetching</BreadcrumbPage>
+                          </BreadcrumbItem>
+                        </BreadcrumbList>
+                      </Breadcrumb>
+                    </div>
+                    {/* {!hasEnvVars ? <EnvVarWarning /> : <HeaderAuth />} */}
                     <div className="flex gap-5 items-center font-semibold">
                       <ThemeSwitcher />
                     </div>
