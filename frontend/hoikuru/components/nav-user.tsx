@@ -1,13 +1,19 @@
 "use client"
+// アイコンコンポーネント
+import { createClient } from "@/utils/supabase/server";
 import {
   ChevronsUpDown,
   LogOut,
 } from "lucide-react"
+
+// アバター関連コンポーネント
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
 } from "@/components/ui/avatar"
+
+// ドロップダウンコンポーネント
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,12 +23,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+
+// サイドバーコンポーネント
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
+
 export function NavUser({
   user,
 }: {
