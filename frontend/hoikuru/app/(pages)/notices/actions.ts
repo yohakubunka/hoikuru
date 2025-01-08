@@ -251,6 +251,7 @@ export const uploadImageToSupabase = async (file:any) => {
 
 const supabase = await createClient();
 
+// multiバイトでエラーが出るのでミリ秒まで名前にする uuidの使用
 const fileName = `${Date.now()}-${file.name}`;
 
 // Promiseを返却
