@@ -19,7 +19,7 @@
     "@radix-ui/react-toast": "^1.2.2",
     "@radix-ui/react-tooltip": "^1.1.6",
     "@supabase/ssr": "latest",
-    "@supabase/supabase-js": "^2.46.1",
+    "@supabase/supabase-js": "^2.48.0",
     "@tanstack/react-table": "^8.20.5",
     "autoprefixer": "10.4.17",
     "bcrypt": "^5.1.1",
