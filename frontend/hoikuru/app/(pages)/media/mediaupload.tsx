@@ -1,158 +1,144 @@
-"use client";
+"use client"
 
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import React, { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
+import { useState, useEffect } from "react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import { toast } from "@/hooks/use-toast"
+import { fetchMediaList, createMedia, deleteMedia } from "./actions"
 
-export default function UploadPage() {
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [uploadedImages, setUploadedImages] = useState<
-    { url: string; path: string }[]
-  >([]);
-  const { toast } = useToast();
+const MAX_FILE_SIZE = 5000000 // 5MB
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"]
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) setImageFile(file);
-  };
+const formSchema = z.object({
+  file: z
+    .instanceof(File)
+    .refine((file) => file.size <= MAX_FILE_SIZE, `ファイルサイズは5MB以下にしてください。`)
+    .refine(
+      (file) => ACCEPTED_IMAGE_TYPES.includes(file.type),
+      "ファイル形式は .jpg, .png, .gif, または .webp のみ許可されています。",
+    ),
+})
 
-  const handleUpload = async () => {
-    if (!imageFile) {
-      toast({
-        title: "画像を選択してください",
-        variant: "destructive",
-      });
-      return;
-    }
+type Media = {
+  id: number
+  file_path: string
+}
 
-    const fileName = `test/${Date.now()}-${imageFile.name}`;
-    const { data, error } = await supabase.storage
-      .from("media")
-      .upload(fileName, imageFile);
+export function MediaUploadForm() {
+  const [isLoading, setIsLoading] = useState(false)
+  const [mediaList, setMediaList] = useState<Media[]>([])
 
-    if (error) {
-      console.error("Upload error:", error.message);
-      toast({
-        title: "アップロード失敗",
-        description: error.message,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const publicUrl = supabase.storage.from("media").getPublicUrl(fileName).data.publicUrl;
-
-    const { error: dbError } = await supabase.from("media").insert([
-      {
-        name: imageFile.name,
-        url: publicUrl,
-        path: fileName,
-      },
-    ]);
-
-    if (dbError) {
-      console.error("Database insert error:", dbError.message);
-      toast({
-        title: "データベース更新失敗",
-        description: dbError.message,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    toast({
-      title: "アップロード成功",
-      description: "画像が正常にアップロードされました。",
-    });
-    fetchUploadedImages();
-  };
-
-  const fetchUploadedImages = async () => {
-    const { data, error } = await supabase.from("media").select("*").order("created_at", { ascending: false });
-
-    if (error) {
-      console.error("Error fetching images:", error.message);
-      toast({
-        title: "画像一覧の取得失敗",
-        description: error.message,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (data) {
-      const imageUrls = data.map((row) => ({
-        url: row.url,
-        path: row.path,
-      }));
-      setUploadedImages(imageUrls);
-    }
-  };
-
-  const handleDelete = async (path: string) => {
-    const { data, error } = await supabase.storage.from("media").remove([path]);
-
-    if (error) {
-      console.error("削除エラー:", error.message);
-      toast({
-        title: "削除エラー",
-        description: error.message,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const { error: dbError } = await supabase.from("media").delete().eq("path", path);
-
-    if (dbError) {
-      console.error("データベース削除エラー:", dbError.message);
-      toast({
-        title: "データベース削除失敗",
-        description: dbError.message,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setUploadedImages((prevImages) => prevImages.filter((image) => image.path !== path));
-
-    toast({
-      title: "画像が削除されました",
-    });
-  };
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+  })
 
   useEffect(() => {
-    fetchUploadedImages();
-  }, []);
+    loadMediaList()
+  }, [])
+
+  async function loadMediaList() {
+    try {
+      const data = await fetchMediaList()
+      setMediaList(data)
+    } catch (error) {
+      toast({
+        title: "エラーが発生しました",
+        description: "メディアリストの取得に失敗しました。",
+        variant: "destructive",
+      })
+    }
+  }
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsLoading(true)
+    try {
+      await createMedia(values.file)
+      toast({
+        title: "メディアがアップロードされました",
+      })
+      form.reset()
+      loadMediaList()
+    } catch (error) {
+      toast({
+        title: "エラーが発生しました",
+        description: error instanceof Error ? error.message : "メディアの保存に失敗しました。",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  async function handleDelete(id: number) {
+    try {
+      await deleteMedia(id)
+      toast({
+        title: "メディアが削除されました",
+      })
+      loadMediaList()
+    } catch (error) {
+      toast({
+        title: "エラーが発生しました",
+        description: "メディアの削除に失敗しました。",
+        variant: "destructive",
+      })
+    }
+  }
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">画像アップロード</h1>
-      <div className="mb-6">
-        <Input id="picture" type="file" accept="image/*" onChange={handleFileChange} />
-        <Button className="mt-4" onClick={handleUpload}>
-          アップロード
-        </Button>
-      </div>
+    <div className="space-y-8">
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <FormField
+            control={form.control}
+            name="file"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>画像ファイル</FormLabel>
+                <FormControl>
+                  <Input
+                    type="file"
+                    accept={ACCEPTED_IMAGE_TYPES.join(",")}
+                    onChange={(e) => field.onChange(e.target.files?.[0])}
+                  />
+                </FormControl>
+                <FormDescription>
+                  JPEG、PNG、GIF、またはWebP形式の画像をアップロードしてください（最大5MB）。
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? "アップロード中..." : "アップロード"}
+          </Button>
+        </form>
+      </Form>
 
-      <div>
-        <h2 className="text-xl font-semibold mb-4">画像一覧</h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {uploadedImages.map((image, index) => (
-            <div key={index} className="relative border rounded overflow-hidden">
-              <img src={image.url} alt={`Uploaded ${index}`} className="w-full h-auto" />
-              <button
-                onClick={() => handleDelete(image.path)}
-                className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600"
-              >
-                削除
-              </button>
-            </div>
-          ))}
-        </div>
+      <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4">
+        {mediaList.map((media , index) => (
+          <div key={media.id} className="relative">
+            <img
+              src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/media/${media.file_path}`}
+              alt={`Uploaded ${index}`}
+              className="w-full h-40 object-cover rounded"
+            />
+            <Button
+              onClick={() => handleDelete(media.id)}
+              variant="destructive"
+              size="sm"
+              className="absolute top-2 right-2"
+            >
+              削除
+            </Button>
+          </div>
+        ))}
       </div>
     </div>
-  );
+  )
 }
+
