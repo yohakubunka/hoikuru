@@ -24,8 +24,8 @@ const formSchema = z.object({
 })
 
 type Media = {
-  id: number
-  file_path: string
+  name: string
+  id: string
 }
 
 export function MediaUploadForm() {
@@ -43,7 +43,7 @@ export function MediaUploadForm() {
   async function loadMediaList() {
     try {
       const data = await fetchMediaList()
-      setMediaList(data)
+      setMediaList(data || [])
     } catch (error) {
       toast({
         title: "エラーが発生しました",
@@ -73,9 +73,9 @@ export function MediaUploadForm() {
     }
   }
 
-  async function handleDelete(id: number) {
+  async function handleDelete(path: string) {
     try {
-      await deleteMedia(id)
+      await deleteMedia(path)
       toast({
         title: "メディアが削除されました",
       })
@@ -120,15 +120,15 @@ export function MediaUploadForm() {
       </Form>
 
       <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4">
-        {mediaList.map((media , index) => (
+        {mediaList.map((media) => (
           <div key={media.id} className="relative">
             <img
-              src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/media/${media.file_path}`}
-              alt={`Uploaded ${index}`}
+              src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/media/${media.name}`}
+              alt="Uploaded media"
               className="w-full h-40 object-cover rounded"
             />
             <Button
-              onClick={() => handleDelete(media.id)}
+              onClick={() => handleDelete(`${media.name}`)}
               variant="destructive"
               size="sm"
               className="absolute top-2 right-2"
