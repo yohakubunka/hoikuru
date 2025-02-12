@@ -175,6 +175,8 @@ export default function NoticeAdd() {
   // カテゴリーの取得
   const fetchCategories = async () => {
     const data: any = await selectCategoriesAction();
+    console.log(data);
+
     if (data) {
       setCategories(data);
     } else {
@@ -334,34 +336,35 @@ export default function NoticeAdd() {
                     </div>
                     <FormControl>
                       <div className="checkbox-group">
-                        {categories.map((category: Category) => (
-                          <div
-                            key={category.id}
-                            className="checkbox-item flex items-center gap-2 border-b last:border-0 p-4"
-                          >
-                            <input
-                              type="checkbox"
-                              id={`category-${category.id}`}
-                              value={category.id.toString()}
-                              checked={(field.value || []).includes(
-                                category.id.toString()
-                              )}
-                              onChange={(e) => {
-                                const value = e.target.value;
-                                const newValue = e.target.checked
-                                  ? [...(field.value || []), value]
-                                  : (field.value || []).filter(
-                                      (id) => id !== value
-                                    );
-                                field.onChange(newValue);
-                              }}
-                              className="form-checkbox h-5 w-5 text-blue-600"
-                            />
-                            <label htmlFor={`category-${category.id}`}>
-                              {category.name}
-                            </label>
-                          </div>
-                        ))}
+                        {categories &&
+                          categories.map((category: Category) => (
+                            <div
+                              key={category.id}
+                              className="checkbox-item flex items-center gap-2 border-b last:border-0 p-4"
+                            >
+                              <input
+                                type="checkbox"
+                                id={`category-${category.id}`}
+                                value={category.id.toString()}
+                                checked={(field.value || []).includes(
+                                  category.id.toString()
+                                )}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  const newValue = e.target.checked
+                                    ? [...(field.value || []), value]
+                                    : (field.value || []).filter(
+                                        (id) => id !== value
+                                      );
+                                  field.onChange(newValue);
+                                }}
+                                className="form-checkbox h-5 w-5 text-blue-600"
+                              />
+                              <label htmlFor={`category-${category.id}`}>
+                                {category.name}
+                              </label>
+                            </div>
+                          ))}
                       </div>
                     </FormControl>
                     <FormMessage />
