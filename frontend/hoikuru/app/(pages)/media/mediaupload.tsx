@@ -24,8 +24,9 @@ const formSchema = z.object({
 })
 
 type Media = {
-  name: string
-  id: string
+  id: number
+  file_path: string
+  created_at: string
 }
 
 export function MediaUploadForm() {
@@ -73,9 +74,9 @@ export function MediaUploadForm() {
     }
   }
 
-  async function handleDelete(path: string) {
+  async function handleDelete(id: number, filePath: string) {
     try {
-      await deleteMedia(path)
+      await deleteMedia(id, filePath)
       toast({
         title: "メディアが削除されました",
       })
@@ -119,25 +120,26 @@ export function MediaUploadForm() {
         </form>
       </Form>
 
-      <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4">
-        {mediaList.map((media) => (
-          <div key={media.id} className="relative">
-            <img
-              src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/media/${media.name}`}
-              alt="Uploaded media"
-              className="w-full h-40 object-cover rounded"
-            />
-            <Button
-              onClick={() => handleDelete(`${media.name}`)}
-              variant="destructive"
-              size="sm"
-              className="absolute top-2 right-2"
-            >
-              削除
-            </Button>
-          </div>
-        ))}
-      </div>
+      {mediaList.length > 0 ? (
+        <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4">
+          {mediaList.map((media) => (
+            <div key={media.id} className="relative group">
+              <img
+                src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/media/${media.file_path}`}
+                alt="Uploaded media"
+                className="w-full aspect-square object-cover rounded"
+              />
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <Button onClick={() => handleDelete(media.id, media.file_path)} variant="destructive" size="sm">
+                  削除
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-center text-gray-500">アップロードされた画像はありません。</p>
+      )}
     </div>
   )
 }
