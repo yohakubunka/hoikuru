@@ -19,8 +19,16 @@ export async function createMedia(file: File) {
   const fileName = `${Math.random()}.${fileExt}`
 
   try {
+    // テーブル構造の確認
+    const { data: tableInfo, error: tableError } = await supabase.from("media").select("*").limit(1)
+
+    if (tableError) {
+      console.error("Table check error:", tableError)
+      throw new Error(`テーブル構造の確認に失敗しました: ${tableError.message}`)
+    }
+
     // ストレージにファイルをアップロード
-    const { error: uploadError } = await supabase.storage.from("media").upload(fileName, file)
+    const { data: uploadData, error: uploadError } = await supabase.storage.from("media").upload(fileName, file)
 
     if (uploadError) {
       console.error("Upload error:", uploadError)
@@ -28,7 +36,14 @@ export async function createMedia(file: File) {
     }
 
     // データベースにレコードを作成
-    const { error: dbError } = await supabase.from("media").insert([{ file_path: fileName }])
+    const { data: insertData, error: dbError } = await supabase
+      .from("media")
+      .insert([
+        {
+          file_path: fileName,
+        },
+      ])
+      .select()
 
     if (dbError) {
       // ロールバック：ストレージからファイルを削除
@@ -38,6 +53,7 @@ export async function createMedia(file: File) {
     }
 
     revalidatePath("/")
+    return insertData
   } catch (error) {
     // 予期せぬエラーの処理
     console.error("Unexpected error:", error)
@@ -47,20 +63,21 @@ export async function createMedia(file: File) {
 
 export async function deleteMedia(id: number, filePath: string) {
   try {
-    // ストレージからファイルを削除
-    const { error: storageError } = await supabase.storage.from("media").remove([filePath])
-
-    if (storageError) {
-      console.error("Storage delete error:", storageError)
-      throw new Error(`ファイルの削除に失敗しました: ${storageError.message}`)
-    }
-
     // データベースからレコードを削除
     const { error: dbError } = await supabase.from("media").delete().eq("id", id)
 
     if (dbError) {
       console.error("Database delete error:", dbError)
       throw new Error(`データベースからの削除に失敗しました: ${dbError.message}`)
+    }
+
+    // ストレージからファイルを削除
+    const { error: storageError } = await supabase.storage.from("media").remove([filePath])
+
+    if (storageError) {
+      console.error("Storage delete error:", storageError)
+      // Note: データベースからの削除は既に完了しているため、ここでは警告のみ
+      console.warn("ストレージからのファイル削除に失敗しました（データベースからは削除済み）")
     }
 
     revalidatePath("/")
